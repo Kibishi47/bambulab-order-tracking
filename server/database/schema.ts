@@ -46,7 +46,7 @@ export const settlements = sqliteTable('settlements', {
   payerId: integer('payer_id').notNull().references(() => members.id, { onDelete: 'cascade' }),
   receiverId: integer('receiver_id').notNull().references(() => members.id, { onDelete: 'cascade' }),
   amount: real('amount').notNull(),
-  paymentMethod: text('payment_method', { enum: ['LYDIA', 'PAYPAL', 'VIREMENT', 'ESPECES', 'AUTRE'] }).notNull().default('LYDIA'),
+  paymentMethod: text('payment_method', { enum: ['WERO', 'LYDIA', 'PAYPAL', 'VIREMENT', 'ESPECES', 'AUTRE'] }).notNull().default('WERO'),
   settledAt: text('settled_at').notNull(),
   notes: text('notes'),
   createdAt: text('created_at').notNull()

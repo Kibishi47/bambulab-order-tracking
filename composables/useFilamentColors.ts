@@ -147,10 +147,11 @@ export const ORDER_STATUSES = [
 ]
 
 export const PAYMENT_METHODS = [
-  { value: 'LYDIA', label: 'Lydia' },
-  { value: 'PAYPAL', label: 'PayPal' },
+  { value: 'WERO', label: 'Wero' },
   { value: 'VIREMENT', label: 'Virement bancaire' },
+  { value: 'PAYPAL', label: 'PayPal' },
   { value: 'ESPECES', label: 'Espèces' },
+  { value: 'LYDIA', label: 'Lydia' },
   { value: 'AUTRE', label: 'Autre' }
 ]
 

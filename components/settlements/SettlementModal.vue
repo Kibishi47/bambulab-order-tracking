@@ -21,7 +21,7 @@ const emit = defineEmits<{
 const payerId = ref<number | ''>('')
 const receiverId = ref<number | ''>('')
 const amount = ref<number | ''>('')
-const paymentMethod = ref('LYDIA')
+const paymentMethod = ref('WERO')
 const settledAt = ref(new Date().toISOString().slice(0, 10))
 const notes = ref('')
 const loading = ref(false)
@@ -33,6 +33,7 @@ watch(() => props.modelValue, (isOpen) => {
     payerId.value = props.prefillPayerId || ''
     receiverId.value = props.prefillReceiverId || ''
     amount.value = props.prefillAmount || ''
+    paymentMethod.value = 'WERO'
   }
 })
 
