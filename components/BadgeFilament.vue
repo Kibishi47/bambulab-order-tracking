@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { BAMBU_FILAMENT_TYPES } from '~/composables/useFilamentColors'
+import { FilamentFormat } from '~/types'
 
 const props = defineProps<{
   type: string
-  format?: 'RECHARGE' | 'BOBINE' | string
+  format?: FilamentFormat | string
   colorName?: string
   colorHex?: string
   size?: 'sm' | 'md' | 'lg'
@@ -42,18 +43,18 @@ const isLightColor = computed(() => {
       {{ typeConfig.name }}
     </span>
 
-    <!-- Format Pill (Recharge vs Bobine) -->
+    <!-- Format Pill (REFILL vs SPOOL) -->
     <span
       v-if="format"
       class="inline-flex items-center rounded-md border font-medium text-[11px]"
       :class="[
-        format === 'BOBINE'
+        format === FilamentFormat.SPOOL
           ? 'bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/40'
           : 'bg-zinc-100 text-zinc-600 border-zinc-200 dark:bg-zinc-800/70 dark:text-zinc-400 dark:border-zinc-700/60',
         size === 'sm' ? 'px-1.5 py-0.5 text-[10px]' : 'px-2 py-0.5'
       ]"
     >
-      {{ format === 'BOBINE' ? 'Bobine' : 'Recharge' }}
+      {{ format }}
     </span>
 
     <!-- Color Swatch & Label -->

@@ -4,7 +4,7 @@ import ConfirmModal from '~/components/ui/ConfirmModal.vue'
 import BadgeFilament from '~/components/BadgeFilament.vue'
 import StatusBadge from '~/components/StatusBadge.vue'
 import { Truck, CheckCheck, AlertCircle, ArrowRight } from 'lucide-vue-next'
-import { NeedStatus, type GroupOrderDTO, type CascadeAction, type FilamentDemandDTO } from '~/types'
+import { NeedStatus, OrderStatus, type GroupOrderDTO, type CascadeAction, type FilamentDemandDTO } from '~/types'
 
 const props = defineProps<{
   modelValue: boolean
@@ -22,7 +22,7 @@ const isReceive = computed(() => props.action === 'RECEIVE')
 
 const requiredPreviousStatus = computed<NeedStatus>(() => isReceive.value ? NeedStatus.ORDERED : NeedStatus.RECEIVED)
 const targetDemandStatus = computed<NeedStatus>(() => isReceive.value ? NeedStatus.RECEIVED : NeedStatus.DISTRIBUTED)
-const targetOrderStatusLabel = computed(() => isReceive.value ? 'Livrée' : 'Clôturée')
+const targetOrderStatusLabel = computed(() => isReceive.value ? OrderStatus.RECEIVED : OrderStatus.DISTRIBUTED)
 
 const demands = computed<FilamentDemandDTO[]>(() => props.order?.demands || [])
 
@@ -87,9 +87,9 @@ const confirmButtonText = computed(() => {
           <p>
             <strong class="text-zinc-900 dark:text-white font-bold">{{ eligibleDemands.length }} besoin(s)</strong>
             ({{ eligibleSpoolsCount }} bobines) actuellement au statut
-            <em class="font-semibold text-zinc-800 dark:text-zinc-200">« {{ isReceive.value ? 'Commandé' : 'Reçu' }} »</em>
+            <em class="font-semibold text-zinc-800 dark:text-zinc-200">« {{ requiredPreviousStatus }} »</em>
             passeront automatiquement au statut
-            <strong class="text-bambu-600 dark:text-bambu-400 font-bold">« {{ isReceive.value ? 'Reçu' : 'Distribué' }} »</strong>.
+            <strong class="text-bambu-600 dark:text-bambu-400 font-bold">« {{ targetDemandStatus }} »</strong>.
           </p>
         </div>
 
@@ -98,7 +98,7 @@ const confirmButtonText = computed(() => {
           <AlertCircle class="w-4 h-4 flex-shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
           <p>
             <strong>Garde-fou :</strong> {{ ignoredDemands.length }} besoin(s) ne sont pas au statut
-            « {{ isReceive.value ? 'Commandé' : 'Reçu' }} » (annulés ou déjà traités) et
+            « {{ requiredPreviousStatus }} » (annulés ou déjà traités) et
             <strong>resteront strictement inchangés</strong>.
           </p>
         </div>

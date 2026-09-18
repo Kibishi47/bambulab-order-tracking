@@ -96,32 +96,32 @@ export const BAMBU_COLOR_PALETTE: FilamentPreset[] = [
 export const DEMAND_STATUSES = [
   {
     value: NeedStatus.REQUESTED,
-    label: 'En attente',
+    label: NeedStatus.REQUESTED,
     color: 'bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-500/15 dark:text-amber-400 dark:border-amber-500/30'
   },
   {
     value: NeedStatus.ASSIGNED,
-    label: 'Pris en charge',
+    label: NeedStatus.ASSIGNED,
     color: 'bg-blue-50 text-blue-800 border-blue-200 dark:bg-blue-500/15 dark:text-blue-400 dark:border-blue-500/30'
   },
   {
     value: NeedStatus.ORDERED,
-    label: 'Commandé',
+    label: NeedStatus.ORDERED,
     color: 'bg-purple-50 text-purple-800 border-purple-200 dark:bg-purple-500/15 dark:text-purple-400 dark:border-purple-500/30'
   },
   {
     value: NeedStatus.RECEIVED,
-    label: 'Reçu',
+    label: NeedStatus.RECEIVED,
     color: 'bg-cyan-50 text-cyan-800 border-cyan-200 dark:bg-cyan-500/15 dark:text-cyan-400 dark:border-cyan-500/30'
   },
   {
     value: NeedStatus.DISTRIBUTED,
-    label: 'Distribué',
+    label: NeedStatus.DISTRIBUTED,
     color: 'bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-400 dark:border-emerald-500/30'
   },
   {
     value: NeedStatus.CANCELLED,
-    label: 'Annulé',
+    label: NeedStatus.CANCELLED,
     color: 'bg-zinc-100 text-zinc-500 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-500 dark:border-zinc-700'
   }
 ] as const
@@ -129,33 +129,33 @@ export const DEMAND_STATUSES = [
 export const ORDER_STATUSES = [
   {
     value: OrderStatus.PENDING,
-    label: 'En préparation',
+    label: OrderStatus.PENDING,
     color: 'bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-500/15 dark:text-amber-400 dark:border-amber-500/30'
   },
   {
     value: OrderStatus.ORDERED,
-    label: 'Commandé',
+    label: OrderStatus.ORDERED,
     color: 'bg-purple-50 text-purple-800 border-purple-200 dark:bg-purple-500/15 dark:text-purple-400 dark:border-purple-500/30'
   },
   {
-    value: OrderStatus.DELIVERED,
-    label: 'Livré',
+    value: OrderStatus.RECEIVED,
+    label: OrderStatus.RECEIVED,
     color: 'bg-cyan-50 text-cyan-800 border-cyan-200 dark:bg-cyan-500/15 dark:text-cyan-400 dark:border-cyan-500/30'
   },
   {
-    value: OrderStatus.CLOSED,
-    label: 'Clôturé',
+    value: OrderStatus.DISTRIBUTED,
+    label: OrderStatus.DISTRIBUTED,
     color: 'bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-400 dark:border-emerald-500/30'
   }
 ] as const
 
 export const PAYMENT_METHODS = [
-  { value: PaymentMethod.WERO, label: 'Wero' },
-  { value: PaymentMethod.TRANSFER, label: 'Virement bancaire' },
-  { value: PaymentMethod.PAYPAL, label: 'PayPal' },
-  { value: PaymentMethod.CASH, label: 'Espèces' },
-  { value: PaymentMethod.LYDIA, label: 'Lydia' },
-  { value: PaymentMethod.OTHER, label: 'Autre' }
+  { value: PaymentMethod.WERO, label: PaymentMethod.WERO },
+  { value: PaymentMethod.TRANSFER, label: PaymentMethod.TRANSFER },
+  { value: PaymentMethod.PAYPAL, label: PaymentMethod.PAYPAL },
+  { value: PaymentMethod.CASH, label: PaymentMethod.CASH },
+  { value: PaymentMethod.LYDIA, label: PaymentMethod.LYDIA },
+  { value: PaymentMethod.OTHER, label: PaymentMethod.OTHER }
 ] as const
 
 export function resolveColorHex(colorName: string, existingHex?: string): string {
@@ -189,13 +189,13 @@ export function resolveColorHex(colorName: string, existingHex?: string): string
 export function getDemandNextStatus(status: NeedStatus | string) {
   switch (status) {
     case NeedStatus.REQUESTED:
-      return { next: NeedStatus.ASSIGNED, label: 'Prendre en charge', icon: CheckCircle }
+      return { next: NeedStatus.ASSIGNED, label: NeedStatus.ASSIGNED, icon: CheckCircle }
     case NeedStatus.ASSIGNED:
-      return { next: NeedStatus.ORDERED, label: 'Commandé', icon: ShoppingBag }
+      return { next: NeedStatus.ORDERED, label: NeedStatus.ORDERED, icon: ShoppingBag }
     case NeedStatus.ORDERED:
-      return { next: NeedStatus.RECEIVED, label: 'Reçu', icon: Truck }
+      return { next: NeedStatus.RECEIVED, label: NeedStatus.RECEIVED, icon: Truck }
     case NeedStatus.RECEIVED:
-      return { next: NeedStatus.DISTRIBUTED, label: 'Distribué', icon: PackageCheck }
+      return { next: NeedStatus.DISTRIBUTED, label: NeedStatus.DISTRIBUTED, icon: PackageCheck }
     default:
       return null
   }

@@ -214,8 +214,8 @@ async function executeDelete() {
             v-model="shippingSplitMethod"
             class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 text-xs font-semibold text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-bambu-500"
           >
-            <option :value="ShippingSplitMode.EQUAL">Équitable (parts égales)</option>
-            <option :value="ShippingSplitMode.PRO_RATA">Au pro rata de la valeur</option>
+            <option :value="ShippingSplitMode.EQUAL">{{ ShippingSplitMode.EQUAL }}</option>
+            <option :value="ShippingSplitMode.PRO_RATA">{{ ShippingSplitMode.PRO_RATA }}</option>
           </select>
         </div>
       </div>

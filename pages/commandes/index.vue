@@ -13,6 +13,7 @@ import {
 } from 'lucide-vue-next'
 import {
   NeedStatus,
+  OrderStatus,
   type CascadeAction,
   type FilamentDemandDTO,
   type GroupOrderDTO,
@@ -174,7 +175,7 @@ const pendingDemands = computed(() => {
           <div class="flex items-center justify-between sm:justify-end gap-2">
             <!-- Action rapide en cascade : Marquer comme reçue (avec confirmation transparente) -->
             <button
-              v-if="o.status !== 'LIVRE' && o.status !== 'CLOTURE'"
+              v-if="o.status !== OrderStatus.RECEIVED && o.status !== OrderStatus.DISTRIBUTED"
               type="button"
               class="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium rounded-lg bg-cyan-50 text-cyan-800 dark:bg-cyan-950/60 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800 hover:bg-cyan-100 dark:hover:bg-cyan-900 transition-colors active:scale-95"
               @click.prevent.stop="promptCascade(o, 'RECEIVE')"
@@ -185,7 +186,7 @@ const pendingDemands = computed(() => {
 
             <!-- Action rapide en cascade : Marquer comme distribuée (avec confirmation transparente) -->
             <button
-              v-if="o.status === 'LIVRE'"
+              v-if="o.status === OrderStatus.RECEIVED"
               type="button"
               class="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium rounded-lg bg-emerald-50 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 dark:hover:bg-emerald-900 transition-colors active:scale-95"
               @click.prevent.stop="promptCascade(o, 'DISTRIBUTE')"
