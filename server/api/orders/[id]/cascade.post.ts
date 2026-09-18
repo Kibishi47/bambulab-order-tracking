@@ -26,13 +26,16 @@ export default defineEventHandler(async (event) => {
   const now = new Date().toISOString()
   let targetOrderStatus: string
   let targetDemandStatus: string
+  let requiredPreviousStatus: string
 
   if (action === 'RECEIVE') {
     targetOrderStatus = 'LIVRE'
     targetDemandStatus = 'RECU'
+    requiredPreviousStatus = 'COMMANDE'
   } else {
     targetOrderStatus = 'CLOTURE'
     targetDemandStatus = 'DISTRIBUE'
+    requiredPreviousStatus = 'RECU'
   }
 
   // Execute in an atomic SQLite transaction
@@ -44,23 +47,36 @@ export default defineEventHandler(async (event) => {
       WHERE id = ?
     `).run(targetOrderStatus, id)
 
-    // 2. Cascade update all linked demands that are not cancelled
+    // Total linked demands in this order
+    const totalDemands = (sqlite.prepare(`
+      SELECT count(*) as count
+      FROM filament_demands
+      WHERE group_order_id = ?
+    `).get(id) as any)?.count || 0
+
+    // 2. Cascade update ONLY demands that are strictly in the required previous status
     const result = sqlite.prepare(`
       UPDATE filament_demands
       SET status = ?, updated_at = ?
-      WHERE group_order_id = ? AND status != 'ANNULE'
-    `).run(targetDemandStatus, now, id)
+      WHERE group_order_id = ? AND status = ?
+    `).run(targetDemandStatus, now, id, requiredPreviousStatus)
 
-    return result.changes
+    const affectedCount = result.changes
+    const ignoredCount = totalDemands - affectedCount
+
+    return { affectedCount, ignoredCount, totalDemands }
   })
 
-  const affectedDemandsCount = executeCascade()
+  const { affectedCount, ignoredCount, totalDemands } = executeCascade()
 
   return {
     success: true,
     orderId: id,
     orderStatus: targetOrderStatus,
     demandStatus: targetDemandStatus,
-    affectedDemandsCount
+    requiredPreviousStatus,
+    affectedCount,
+    ignoredCount,
+    totalDemands
   }
 })
