@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import Modal from '~/components/Modal.vue'
+import ConfirmModal from '~/components/ui/ConfirmModal.vue'
 import DatePicker from '~/components/DatePicker.vue'
 import { PAYMENT_METHODS } from '~/composables/useFilamentColors'
 import { ArrowRight, Check, Calendar, Euro, Trash2, Edit2 } from 'lucide-vue-next'
@@ -100,17 +101,21 @@ async function submit() {
   }
 }
 
-async function handleDelete() {
+const confirmDeleteOpen = ref(false)
+
+function promptDelete() {
+  confirmDeleteOpen.value = true
+}
+
+async function executeDelete() {
   if (!props.settlementToEdit) return
-  if (!confirm('Êtes-vous sûr de vouloir supprimer ce règlement ?\nLes soldes des membres seront automatiquement recalculés.')) {
-    return
-  }
 
   loading.value = true
   errorMessage.value = ''
 
   try {
     await $fetch(`/api/settlements/${props.settlementToEdit.id}`, { method: 'DELETE' })
+    confirmDeleteOpen.value = false
     emit('deleted')
     emit('update:modelValue', false)
   } catch (err: any) {
@@ -238,7 +243,7 @@ async function handleDelete() {
             type="button"
             :disabled="loading"
             class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg text-red-500 hover:bg-red-500/10 border border-transparent hover:border-red-500/20 transition-all disabled:opacity-50"
-            @click="handleDelete"
+            @click="promptDelete"
           >
             <Trash2 class="w-3.5 h-3.5" />
             <span>Supprimer</span>
@@ -264,5 +269,16 @@ async function handleDelete() {
         </div>
       </div>
     </form>
+
+    <!-- Modal de confirmation de suppression -->
+    <ConfirmModal
+      v-model="confirmDeleteOpen"
+      title="Supprimer ce remboursement"
+      :description="`Êtes-vous sûr de vouloir supprimer définitivement ce remboursement de ${settlementToEdit?.amount?.toFixed(2) || ''} € ? Les soldes individuels seront immédiatement recalculés.`"
+      confirm-text="Supprimer le remboursement"
+      variant="danger"
+      :loading="loading"
+      @confirm="executeDelete"
+    />
   </Modal>
 </template>

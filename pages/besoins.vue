@@ -117,17 +117,6 @@ async function updateStatus(id: number, nextStatus: string) {
   }
 }
 
-async function deleteDemand(id: number) {
-  if (!confirm('Voulez-vous vraiment supprimer ce besoin de filament ?')) return
-  try {
-    await $fetch(`/api/demands/${id}`, { method: 'DELETE' })
-    loadDemands()
-    if (triggerRefresh) triggerRefresh()
-  } catch (e) {
-    console.error('Error deleting demand', e)
-  }
-}
-
 function getNextStatus(status: string) {
   switch (status) {
     case 'DEMANDE':

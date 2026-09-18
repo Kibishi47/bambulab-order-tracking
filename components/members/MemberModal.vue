@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import Modal from '~/components/Modal.vue'
+import ConfirmModal from '~/components/ui/ConfirmModal.vue'
 import { User, Mail, Phone, MapPin, Check, Trash2 } from 'lucide-vue-next'
 
 const props = defineProps<{
@@ -85,17 +86,21 @@ async function submit() {
   }
 }
 
-async function handleDelete() {
+const confirmDeleteOpen = ref(false)
+
+function promptDelete() {
+  confirmDeleteOpen.value = true
+}
+
+async function executeDelete() {
   if (!props.memberToEdit) return
-  if (!confirm(`Êtes-vous sûr de vouloir supprimer ${props.memberToEdit.name} ?\nTous ses besoins et commandes associés seront également supprimés.`)) {
-    return
-  }
 
   loading.value = true
   errorMessage.value = ''
 
   try {
     await $fetch(`/api/members/${props.memberToEdit.id}`, { method: 'DELETE' })
+    confirmDeleteOpen.value = false
     emit('deleted')
     emit('update:modelValue', false)
   } catch (err: any) {
@@ -191,7 +196,7 @@ async function handleDelete() {
             type="button"
             :disabled="loading"
             class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg text-red-500 hover:bg-red-500/10 border border-transparent hover:border-red-500/20 transition-all disabled:opacity-50"
-            @click="handleDelete"
+            @click="promptDelete"
           >
             <Trash2 class="w-3.5 h-3.5" />
             <span>Supprimer</span>
@@ -217,5 +222,16 @@ async function handleDelete() {
         </div>
       </div>
     </form>
+
+    <!-- Modal de confirmation de suppression -->
+    <ConfirmModal
+      v-model="confirmDeleteOpen"
+      title="Supprimer ce membre"
+      :description="`Êtes-vous sûr de vouloir supprimer définitivement « ${memberToEdit?.name || ''} » ? Tous ses besoins et participations aux commandes seront également supprimés.`"
+      confirm-text="Supprimer le membre"
+      variant="danger"
+      :loading="loading"
+      @confirm="executeDelete"
+    />
   </Modal>
 </template>

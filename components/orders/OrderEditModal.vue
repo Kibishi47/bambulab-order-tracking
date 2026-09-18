@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import Modal from '~/components/Modal.vue'
+import ConfirmModal from '~/components/ui/ConfirmModal.vue'
 import DatePicker from '~/components/DatePicker.vue'
 import { ORDER_STATUSES } from '~/composables/useFilamentColors'
 import { Edit2, Trash2, Calendar, Hash, User, Euro, Truck } from 'lucide-vue-next'
@@ -85,11 +86,13 @@ async function submit() {
   }
 }
 
-async function handleDelete() {
-  if (!confirm('Êtes-vous sûr de vouloir supprimer cette commande ?\n\nLes besoins rattachés repasseront automatiquement au statut "En attente".')) {
-    return
-  }
+const confirmDeleteOpen = ref(false)
 
+function promptDelete() {
+  confirmDeleteOpen.value = true
+}
+
+async function executeDelete() {
   deleting.value = true
   errorMessage.value = ''
 
@@ -98,6 +101,7 @@ async function handleDelete() {
       method: 'DELETE'
     })
 
+    confirmDeleteOpen.value = false
     emit('deleted')
     emit('update:modelValue', false)
   } catch (err: any) {
@@ -253,10 +257,10 @@ async function handleDelete() {
             type="button"
             :disabled="deleting || loading"
             class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg text-red-500 hover:bg-red-500/10 border border-transparent hover:border-red-500/20 transition-all disabled:opacity-50"
-            @click="handleDelete"
+            @click="promptDelete"
           >
             <Trash2 class="w-3.5 h-3.5" />
-            <span>{{ deleting ? 'Suppression...' : 'Supprimer' }}</span>
+            <span>Supprimer</span>
           </button>
         </div>
 
@@ -280,5 +284,16 @@ async function handleDelete() {
         </div>
       </div>
     </form>
+
+    <!-- Modal de confirmation de suppression -->
+    <ConfirmModal
+      v-model="confirmDeleteOpen"
+      title="Supprimer cette commande"
+      :description="`Êtes-vous sûr de vouloir supprimer la commande #${order?.orderNumber || ''} ? Les besoins associés redeviendront automatiquement en attente de commande.`"
+      confirm-text="Supprimer la commande"
+      variant="danger"
+      :loading="deleting"
+      @confirm="executeDelete"
+    />
   </Modal>
 </template>

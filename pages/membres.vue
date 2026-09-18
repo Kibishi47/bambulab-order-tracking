@@ -58,20 +58,6 @@ function openEditModal(m: any) {
   memberModalOpen.value = true
 }
 
-async function deleteMember(id: number, name: string) {
-  if (!confirm(`Supprimer définitivement le membre "${name}" ? Ses besoins et commandes associés seront affectés.`)) {
-    return
-  }
-
-  try {
-    await $fetch(`/api/members/${id}`, { method: 'DELETE' })
-    loadMembers()
-    if (triggerRefresh) triggerRefresh()
-  } catch (e) {
-    console.error('Error deleting member', e)
-  }
-}
-
 function getMemberBalance(memberId: number) {
   const found = balances.value.find(b => b.memberId === memberId)
   return found?.netBalance || 0
