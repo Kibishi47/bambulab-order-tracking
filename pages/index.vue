@@ -68,9 +68,13 @@ const pendingDemands = computed(() => {
   return demands.value.filter(d => d.status !== 'DISTRIBUE' && d.status !== 'ANNULE')
 })
 
+const orderEligibleDemands = computed(() => {
+  return demands.value.filter(d => d.status === 'DEMANDE' || d.status === 'PRIS_EN_CHARGE')
+})
+
 const totalPendingSpools = computed(() => {
   return demands.value
-    .filter(d => d.status === 'DEMANDE' || d.status === 'PRIS_EN_CHARGE')
+    .filter(d => (d.status === 'DEMANDE' || d.status === 'PRIS_EN_CHARGE') && !d.isPaused)
     .reduce((sum, d) => sum + d.quantity, 0)
 })
 
@@ -349,7 +353,7 @@ function getNextStatus(status: string) {
     <OrderModal
       v-model="orderModalOpen"
       :members="members"
-      :pending-demands="pendingDemands"
+      :pending-demands="orderEligibleDemands"
       @created="loadData(); if (triggerRefresh) triggerRefresh()"
     />
 
