@@ -9,7 +9,7 @@ Ce document détaille l'architecture globale, les conventions techniques et les 
 L'application permet à un groupe d'amis d'optimiser leurs commandes de filaments sur le store officiel **Bambu Lab** :
 - **Commandes groupées** : Atteindre les seuils de frais de port gratuits (>= 55 €) et les remises quantitatives (>= 4 bobines).
 - **Avance de trésorerie** : Un seul membre (l'acheteur) passe la commande et paye l'intégralité du panier.
-- **Cycle de vie des besoins** : Suivi fin de chaque bobine, de la demande initiale jusqu'à la remise en mains propres.
+- **Cycle de vie & Édition complète** : Suivi fin de chaque bobine, avec possibilité d'avancement rapide du statut et d'édition complète (matière, couleur, quantité, prix estimé, statut, notes).
 - **Remboursements simplifiés ("Qui doit quoi à qui")** : Minimisation du nombre de virements nécessaires pour solder tous les comptes grâce à un algorithme glouton de compensation de dettes.
 
 ---
@@ -22,12 +22,18 @@ L'application permet à un groupe d'amis d'optimiser leurs commandes de filament
   - Mode journal : `WAL` (`sqlite.pragma('journal_mode = WAL')`).
   - Clés étrangères actives : `sqlite.pragma('foreign_keys = ON')`.
   - Emplacement par défaut : `data/bambulab.db` (surchargeable via `DATABASE_PATH`).
-- **Auto-migration & Boot** : `server/plugins/db.ts` initialise les tables SQLite à chaque démarrage de l'application via `CREATE TABLE IF NOT EXISTS` et applique un jeu de données de test si la base est vide.
-- **UI / CSS** : Tailwind CSS avec la charte officielle Bambu Lab :
-  - Vert accent : `bambu-500` (`#00AE42`), `bambu-600` (`#009a3a`).
-  - Arrière-plan : `bg-[#0c0d10]`, cartes `bg-[#14161a]`, bordures `border-zinc-800`.
-- **Icônes** : `lucide-vue-next` (import direct par composant).
-- **Dépendances** : Politique stricte zéro bloat. Ne pas introduire d'ORM lourd (interdiction d'utiliser Prisma) ni de frameworks UI surdimensionnés.
+- **Auto-migration & Sécurité Zero Seeding** :
+  - `server/plugins/db.ts` initialise **uniquement** les tables SQLite à chaque démarrage de l'application via `CREATE TABLE IF NOT EXISTS`.
+  - Le seed de démo réside de manière isolée dans `server/database/seed.ts` et n'est **jamais** exécuté en production (`npm run db:seed` ou `RUN_SEED=true` en local).
+- **UI & Design System** :
+  - Tailwind CSS avec mode sombre par classe (`darkMode: 'class'`).
+  - Palette sobre inspirée du matériel physique Bambu Lab :
+    - Mode clair : `bg-zinc-50`, cartes `bg-white border-zinc-200`, texte `text-zinc-900`.
+    - Mode sombre : `bg-zinc-950`, cartes `bg-zinc-900 border-zinc-800`, texte `text-zinc-100`.
+    - Accentuation ponctuelle : Vert Bambu `#00AE42` pour les actions primaires et badges actifs (aucun halo lumineux ou néon).
+  - Gestion du thème : `composables/useTheme.ts` avec script anti-scintillement dans le `<head>` et persistance `localStorage`.
+- **Icônes** : `lucide-vue-next`.
+- **Dépendances** : Politique stricte zéro bloat.
 
 ---
 
@@ -104,41 +110,21 @@ $$
 - $\text{Remb. Versés}_M$ : somme des virements où $M$ est `payer_id`.
 - $\text{Remb. Reçus}_M$ : somme des virements où $M$ est `receiver_id`.
 
-**Interprétation :**
-- $\text{Solde Net} > +0.01\ \text{€}$ : $M$ est **Créancier** (on doit lui rembourser de l'argent).
-- $\text{Solde Net} < -0.01\ \text{€}$ : $M$ est **Débiteur** (il doit de l'argent au groupe).
-- Autour de $0\ \text{€}$ : $M$ est **À jour**.
-
 ### Algorithme de Simplification de Dettes ("Qui doit quoi à qui")
-1. Filtrer les membres ayant un solde strictement positif ($\text{Créanciers}$) et ceux ayant un solde strictement négatif ($\text{Débiteurs}$).
-2. Trier les créanciers par montant décroissant.
-3. Trier les débiteurs par valeur absolue décroissante.
-4. Effectuer un appariement glouton :
-   - Associer le plus gros débiteur au plus gros créancier.
-   - Montant de la transaction = $\min(\text{Dette Restante}, \text{Créance Restante})$.
-   - Enregistrer la transaction simplifiée : `{ from: Débiteur, to: Créancier, amount: Montant }`.
-   - Décrémenter les soldes restants et avancer les pointeurs.
-   - Répéter jusqu'à ce que tous les comptes soient soldés.
+1. Filtrer les membres créanciers ($\text{Solde Net} > +0.01\ \text{€}$) et débiteurs ($\text{Solde Net} < -0.01\ \text{€}$).
+2. Trier les créanciers par montant décroissant et débiteurs par dette décroissante.
+3. Apparier gloutonnement le plus gros débiteur avec le plus gros créancier avec $\min(\text{Dette Restante}, \text{Créance Restante})$.
+4. Répéter jusqu'à équilibre complet de tous les comptes.
 
 ---
 
-## 5. Conventions de Code & Rigueur
+## 5. Déploiement Docker & Coolify
 
-### 5.1 Commits Git (Conventional Commits)
-Tout ajout de code ou refactoring doit être commité avec des messages clairs et atomiques :
-- `feat(...)` : nouvelle fonctionnalité
-- `fix(...)` : correction d'un bug
-- `refactor(...)` : amélioration de structure sans impact fonctionnel
-- `chore(...)` : maintenance, configuration, dépendances
-- `docs(...)` : documentation (`README.md`, `AGENTS.md`)
-
-### 5.2 TypeScript & Typage Strict
-- Ne pas utiliser `any` sans justification explicite.
-- Utiliser les types inférés de Drizzle (`typeof members.$inferSelect`, `typeof filamentDemands.$inferInsert`).
-
-### 5.3 Sécurité & Persistance Coolify
-- Ne jamais coder en dur le chemin de la base SQLite. Toujours utiliser `process.env.DATABASE_PATH || './data/bambulab.db'`.
-- Le conteneur Docker tourne sous l'utilisateur non-root `node`. Les dossiers créés doivent disposer des permissions adéquates (`chown -R node:node /app`).
+### Spécificités Alpine
+- **Builder Stage** : `apk add --no-cache python3 make g++` est obligatoire pour la compilation native de `better-sqlite3`. Le lockfile npm est synchronisé via `npm i -g npm@latest && npm ci`.
+- **Runner Stage** : `apk add --no-cache curl libstdc++` est nécessaire pour exécuter le binaire C++ `better-sqlite3` sur Alpine musl sans dépendance manquante.
+- L'application tourne sous l'utilisateur non-root `node`.
+- Le volume persistant doit être monté sur `/app/data`.
 
 ---
 
@@ -148,12 +134,13 @@ Tout ajout de code ou refactoring doit être commité avec des messages clairs e
 # Lancer le serveur de développement
 npm run dev
 
+# Exécuter le seed de test manuellement (développement uniquement)
+npm run db:seed
+
 # Vérifier la compilation et le typage
-npx nuxt build
+npm run build
 
-# Générer les types Nuxt
-npx nuxi prepare
-
-# Lancer la production en conteneur Docker
-docker compose up -d --build
+# Tester l'image Docker en local
+docker build -t bambulab-order-tracking .
+docker run --rm -p 3000:3000 bambulab-order-tracking
 ```
