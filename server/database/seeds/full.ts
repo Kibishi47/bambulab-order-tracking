@@ -193,7 +193,8 @@ export function seedFull() {
       estimatedUnitPrice: 18.99,
       actualUnitPrice: null,
       status: 'DEMANDE',
-      notes: 'Prochaine commande pour luminaires',
+      isPaused: true,
+      notes: 'Luminaires salon - Pas de budget ce mois-ci (besoin mis en pause)',
       createdAt: now,
       updatedAt: now
     },
@@ -209,7 +210,25 @@ export function seedFull() {
       estimatedUnitPrice: 29.99,
       actualUnitPrice: null,
       status: 'DEMANDE',
-      notes: 'Support soluble soluble (Cadeau offert par Sophie pour le projet associatif)',
+      isPaused: false,
+      notes: 'Support soluble (Cadeau offert par Sophie pour le projet associatif)',
+      createdAt: now,
+      updatedAt: now
+    },
+    {
+      memberId: lucas.id,
+      payerMemberId: null,
+      groupOrderId: null,
+      filamentType: 'PLA Matte',
+      format: 'RECHARGE',
+      colorName: 'Bleu Océan',
+      colorHex: '#0077BE',
+      quantity: 1,
+      estimatedUnitPrice: 16.99,
+      actualUnitPrice: null,
+      status: 'DEMANDE',
+      isPaused: false,
+      notes: 'Boîtier domotique',
       createdAt: now,
       updatedAt: now
     }

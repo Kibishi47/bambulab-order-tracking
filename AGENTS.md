@@ -78,6 +78,7 @@ L'application permet à un groupe d'amis d'optimiser leurs commandes de filament
 | `estimated_unit_price` | REAL | NOT NULL | Prix unitaire estimé (€) |
 | `actual_unit_price` | REAL | NULLABLE | Prix unitaire réel facturé (€) |
 | `status` | TEXT | NOT NULL | `DEMANDE`, `PRIS_EN_CHARGE`, `COMMANDE`, `RECU`, `DISTRIBUE`, `ANNULE` |
+| `is_paused` | INTEGER (BOOLEAN) | NOT NULL DEFAULT 0 | Gel temporaire du besoin (pas de budget, exclus des commandes) |
 | `notes` | TEXT | NULLABLE | Contexte, nom de projet, etc. |
 | `created_at` | TEXT | NOT NULL | Timestamp ISO |
 | `updated_at` | TEXT | NOT NULL | Timestamp ISO |
