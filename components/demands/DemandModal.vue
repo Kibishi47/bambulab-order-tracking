@@ -10,9 +10,9 @@ import {
 } from '~/composables/useFilamentColors'
 
 const props = defineProps<{
-  modelValue: boolean
-  members: Array<{ id: number, name: string }>
-  initialMemberId?: number
+  modelValue: boolean,
+  members: Array<{ id: number, name: string }>,
+  initialMemberId?: number,
   demandToEdit?: any | null
 }>()
 
