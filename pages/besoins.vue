@@ -17,7 +17,8 @@ import {
   PackageCheck,
   ShoppingBag,
   Trash2,
-  Edit2
+  Edit2,
+  PauseCircle
 } from 'lucide-vue-next'
 
 const triggerRefresh = inject<() => void>('triggerRefresh')
@@ -41,14 +42,14 @@ const orderModalOpen = ref(false)
 async function loadDemands() {
   loading.value = true
   try {
-    const [d, m] = await Promise.all([
+    const [demandsData, membersData] = await Promise.all([
       $fetch('/api/demands'),
       $fetch('/api/members')
     ])
-    demands.value = d as any[]
-    members.value = m as any[]
+    demands.value = demandsData as any[]
+    members.value = membersData as any[]
   } catch (e) {
-    console.error('Error fetching demands', e)
+    console.error('Error loading demands', e)
   } finally {
     loading.value = false
   }
@@ -80,7 +81,7 @@ const filteredDemands = computed(() => {
 })
 
 const pendingForOrder = computed(() => {
-  return demands.value.filter(d => d.status === 'DEMANDE' || d.status === 'PRIS_EN_CHARGE')
+  return demands.value.filter(d => (d.status === 'DEMANDE' || d.status === 'PRIS_EN_CHARGE') && !d.isPaused)
 })
 
 const totalPendingSpools = computed(() => {
@@ -102,6 +103,20 @@ function openCreateModal() {
 function openEditModal(d: any) {
   demandToEdit.value = d
   demandModalOpen.value = true
+}
+
+async function togglePause(d: any) {
+  try {
+    const nextVal = !d.isPaused
+    await $fetch(`/api/demands/${d.id}`, {
+      method: 'PATCH',
+      body: { isPaused: nextVal }
+    })
+    d.isPaused = nextVal
+    if (triggerRefresh) triggerRefresh()
+  } catch (e) {
+    console.error('Error toggling pause', e)
+  }
 }
 
 async function updateStatus(id: number, nextStatus: string) {
@@ -288,6 +303,14 @@ function getNextStatus(status: string) {
             <div class="flex items-center gap-2 flex-wrap">
               <span class="text-sm font-bold text-zinc-900 dark:text-white truncate max-w-[150px] sm:max-w-none">{{ d.memberName }}</span>
               <span
+                v-if="d.isPaused"
+                class="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200/80 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800/40 whitespace-nowrap"
+                title="Besoin en pause - Ne pas commander pour l'instant (pas de budget)"
+              >
+                <PauseCircle class="w-3 h-3 text-amber-500" />
+                <span>En pause</span>
+              </span>
+              <span
                 v-if="d.payerMemberName"
                 class="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200/80 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/40 whitespace-nowrap"
                 :title="`Article offert et pris en charge par ${d.payerMemberName}`"
@@ -340,6 +363,22 @@ function getNextStatus(status: string) {
 
           <!-- Colonne 4 : Zone d'actions (largeur fixe 190px sur grand écran) -->
           <div class="flex items-center justify-end gap-2 pt-2 border-t border-zinc-100 dark:border-zinc-800/60 lg:border-0 lg:pt-0 lg:w-[190px]">
+            <!-- Quick Toggle Pause -->
+            <button
+              v-if="!d.groupOrderId && (d.status === 'DEMANDE' || d.status === 'PRIS_EN_CHARGE')"
+              type="button"
+              class="p-2 sm:p-1.5 rounded-lg transition-colors border flex-shrink-0"
+              :class="[
+                d.isPaused
+                  ? 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800/60 hover:bg-amber-100'
+                  : 'text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 border-transparent hover:border-zinc-200 dark:hover:border-zinc-700'
+              ]"
+              :title="d.isPaused ? 'Réactiver le besoin (prêt à commander)' : 'Mettre en pause (pas de budget pour l\'instant)'"
+              @click="togglePause(d)"
+            >
+              <PauseCircle class="w-4 h-4 sm:w-3.5 sm:h-3.5" />
+            </button>
+
             <!-- Edit Action (Pencil) -->
             <button
               type="button"

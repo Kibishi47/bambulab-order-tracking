@@ -68,6 +68,7 @@ function initSchema(sqlite: Database.Database) {
       estimated_unit_price REAL NOT NULL DEFAULT 16.99,
       actual_unit_price REAL,
       status TEXT NOT NULL DEFAULT 'DEMANDE',
+      is_paused INTEGER NOT NULL DEFAULT 0,
       notes TEXT,
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL
@@ -94,6 +95,12 @@ function initSchema(sqlite: Database.Database) {
 
   try {
     sqlite.exec(`ALTER TABLE filament_demands ADD COLUMN payer_member_id INTEGER REFERENCES members(id) ON DELETE SET NULL;`)
+  } catch {
+    // Column already exists
+  }
+
+  try {
+    sqlite.exec(`ALTER TABLE filament_demands ADD COLUMN is_paused INTEGER NOT NULL DEFAULT 0;`)
   } catch {
     // Column already exists
   }

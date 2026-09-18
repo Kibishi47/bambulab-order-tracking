@@ -53,6 +53,7 @@ export default defineEventHandler(async (event) => {
       estimatedUnitPrice: filamentDemands.estimatedUnitPrice,
       actualUnitPrice: filamentDemands.actualUnitPrice,
       status: filamentDemands.status,
+      isPaused: filamentDemands.isPaused,
       notes: filamentDemands.notes,
       memberName: members.name,
       memberEmail: members.email,

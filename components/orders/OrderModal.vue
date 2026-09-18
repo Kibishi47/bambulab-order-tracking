@@ -3,7 +3,7 @@ import { ref, computed, watch } from 'vue'
 import Modal from '~/components/Modal.vue'
 import BadgeFilament from '~/components/BadgeFilament.vue'
 import DatePicker from '~/components/DatePicker.vue'
-import { ShoppingCart, Check, Calendar, Hash, User, Euro } from 'lucide-vue-next'
+import { ShoppingCart, Check, Calendar, Hash, User, Euro, PauseCircle, ChevronDown } from 'lucide-vue-next'
 
 const props = defineProps<{
   modelValue: boolean
@@ -11,12 +11,14 @@ const props = defineProps<{
   pendingDemands: Array<{
     id: number
     memberName: string
+    payerMemberName?: string | null
     filamentType: string
     format: string
     colorName: string
     colorHex: string
     quantity: number
     estimatedUnitPrice: number
+    isPaused?: boolean
   }>
 }>()
 
@@ -33,8 +35,17 @@ const shippingFee = ref(0)
 const shippingSplitMethod = ref<'EQUITABLE' | 'PRORATA'>('EQUITABLE')
 const notes = ref('')
 const selectedDemandIds = ref<number[]>([])
+const showPausedSection = ref(false)
 const loading = ref(false)
 const errorMessage = ref('')
+
+const activePendingDemands = computed(() => {
+  return props.pendingDemands.filter(d => !d.isPaused)
+})
+
+const pausedDemands = computed(() => {
+  return props.pendingDemands.filter(d => !!d.isPaused)
+})
 
 watch(() => props.modelValue, (isOpen) => {
   if (isOpen) {
@@ -43,13 +54,13 @@ watch(() => props.modelValue, (isOpen) => {
     buyerId.value = ''
     shippingFee.value = 0
     shippingSplitMethod.value = 'EQUITABLE'
-    selectedDemandIds.value = props.pendingDemands.map(d => d.id)
+    selectedDemandIds.value = activePendingDemands.value.map(d => d.id)
     autoCalculateTotal()
   }
 })
 
 const selectedDemandsTotal = computed(() => {
-  const selected = props.pendingDemands.filter(d => selectedDemandIds.value.includes(d.id))
+  const selected = activePendingDemands.value.filter(d => selectedDemandIds.value.includes(d.id))
   return selected.reduce((sum, d) => sum + (d.quantity * d.estimatedUnitPrice), 0)
 })
 
@@ -59,10 +70,10 @@ function autoCalculateTotal() {
 }
 
 function toggleSelectAll() {
-  if (selectedDemandIds.value.length === props.pendingDemands.length) {
+  if (selectedDemandIds.value.length === activePendingDemands.value.length) {
     selectedDemandIds.value = []
   } else {
-    selectedDemandIds.value = props.pendingDemands.map(d => d.id)
+    selectedDemandIds.value = activePendingDemands.value.map(d => d.id)
   }
 }
 
@@ -245,24 +256,25 @@ async function submit() {
       <div>
         <div class="flex items-center justify-between mb-1.5">
           <label class="text-xs font-semibold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider">
-            Besoins inclus ({{ selectedDemandIds.length }}/{{ pendingDemands.length }})
+            Besoins prêts à commander ({{ selectedDemandIds.length }}/{{ activePendingDemands.length }})
           </label>
           <button
+            v-if="activePendingDemands.length > 0"
             type="button"
             class="text-xs text-bambu-600 dark:text-bambu-400 hover:underline"
             @click="toggleSelectAll"
           >
-            {{ selectedDemandIds.length === pendingDemands.length ? 'Tout désélectionner' : 'Tout sélectionner' }}
+            {{ selectedDemandIds.length === activePendingDemands.length ? 'Tout désélectionner' : 'Tout sélectionner' }}
           </button>
         </div>
 
-        <div v-if="pendingDemands.length === 0" class="p-3.5 rounded-lg bg-zinc-50 dark:bg-zinc-900/40 border border-zinc-200 dark:border-zinc-800 text-center text-xs text-zinc-500">
-          Aucun besoin en attente actuellement. Vous pouvez tout de même créer une commande manuelle.
+        <div v-if="activePendingDemands.length === 0" class="p-3.5 rounded-lg bg-zinc-50 dark:bg-zinc-900/40 border border-zinc-200 dark:border-zinc-800 text-center text-xs text-zinc-500">
+          Aucun besoin actif en attente actuellement. Vous pouvez tout de même créer une commande manuelle.
         </div>
 
         <div v-else class="max-h-48 overflow-y-auto space-y-1.5 pr-1">
           <label
-            v-for="d in pendingDemands"
+            v-for="d in activePendingDemands"
             :key="d.id"
             class="flex items-center justify-between p-2.5 rounded-lg border cursor-pointer transition-all text-xs"
             :class="[
@@ -279,8 +291,11 @@ async function submit() {
                 class="w-4 h-4 rounded border-zinc-300 dark:border-zinc-700 text-bambu-500 focus:ring-bambu-500"
               />
               <div>
-                <div class="flex items-center gap-1.5">
+                <div class="flex items-center gap-1.5 flex-wrap">
                   <span class="font-semibold text-zinc-900 dark:text-white">{{ d.memberName }}</span>
+                  <span v-if="d.payerMemberName" class="text-[10px] text-amber-600 dark:text-amber-400 font-medium">
+                    (🎁 payé par {{ d.payerMemberName }})
+                  </span>
                   <span class="text-zinc-400">•</span>
                   <span class="text-zinc-700 dark:text-zinc-300 font-medium">{{ d.quantity }}x</span>
                 </div>
@@ -302,6 +317,66 @@ async function submit() {
               </span>
             </div>
           </label>
+        </div>
+
+        <!-- Section repliable des besoins en pause -->
+        <div v-if="pausedDemands.length > 0" class="mt-3 pt-3 border-t border-zinc-200 dark:border-zinc-800 space-y-2">
+          <button
+            type="button"
+            class="flex items-center justify-between w-full text-xs font-semibold text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors"
+            @click="showPausedSection = !showPausedSection"
+          >
+            <span class="flex items-center gap-1.5">
+              <PauseCircle class="w-3.5 h-3.5 text-amber-500" />
+              <span>Besoins en pause ({{ pausedDemands.length }})</span>
+              <span class="text-[10px] font-normal text-zinc-400">— non sélectionnables</span>
+            </span>
+            <ChevronDown class="w-4 h-4 transition-transform duration-200" :class="{ 'rotate-180': showPausedSection }" />
+          </button>
+
+          <div v-if="showPausedSection" class="space-y-1.5 pt-1">
+            <p class="text-[11px] text-zinc-500 dark:text-zinc-400 italic">
+              Ces besoins sont temporairement gelés par leurs demandeurs (pas de budget pour l'instant) et sont exclus de la commande.
+            </p>
+            <div
+              v-for="d in pausedDemands"
+              :key="d.id"
+              class="flex items-center justify-between p-2.5 rounded-lg border border-dashed border-zinc-200 dark:border-zinc-800 bg-zinc-50/60 dark:bg-zinc-900/30 opacity-60 text-xs cursor-not-allowed select-none"
+            >
+              <div class="flex items-center gap-2.5">
+                <input
+                  type="checkbox"
+                  disabled
+                  class="w-4 h-4 rounded border-zinc-300 dark:border-zinc-700 text-zinc-400 cursor-not-allowed"
+                />
+                <div>
+                  <div class="flex items-center gap-1.5 flex-wrap">
+                    <span class="font-semibold text-zinc-700 dark:text-zinc-300">{{ d.memberName }}</span>
+                    <span class="text-zinc-400">•</span>
+                    <span class="text-zinc-500">{{ d.quantity }}x</span>
+                    <span class="text-[10px] px-1.5 py-0.2 rounded bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 font-medium">
+                      Gelé
+                    </span>
+                  </div>
+                  <div class="mt-0.5">
+                    <BadgeFilament
+                      :type="d.filamentType"
+                      :format="d.format"
+                      :color-name="d.colorName"
+                      :color-hex="d.colorHex"
+                      size="sm"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div class="text-right">
+                <span class="font-bold font-mono text-zinc-400">
+                  {{ (d.quantity * d.estimatedUnitPrice).toFixed(2) }} €
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 

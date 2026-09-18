@@ -15,7 +15,8 @@ import {
   Edit2,
   CheckCircle,
   Truck,
-  PackageCheck
+  PackageCheck,
+  PauseCircle
 } from 'lucide-vue-next'
 
 const triggerRefresh = inject<() => void>('triggerRefresh')
@@ -257,6 +258,14 @@ function getNextStatus(status: string) {
           <div class="min-w-0 space-y-1">
             <div class="flex items-center gap-2 flex-wrap">
               <span class="text-xs font-bold text-zinc-900 dark:text-white">{{ d.memberName }}</span>
+              <span
+                v-if="d.isPaused"
+                class="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200/80 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800/40 whitespace-nowrap"
+                title="Besoin en pause - Ne pas commander pour l'instant (pas de budget)"
+              >
+                <PauseCircle class="w-2.5 h-2.5 text-amber-500" />
+                <span>En pause</span>
+              </span>
               <span
                 v-if="d.payerMemberName"
                 class="inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200/80 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/40 whitespace-nowrap"

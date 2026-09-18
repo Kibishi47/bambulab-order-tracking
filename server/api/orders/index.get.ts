@@ -36,6 +36,7 @@ export default defineEventHandler(async () => {
     colorHex: filamentDemands.colorHex,
     quantity: filamentDemands.quantity,
     status: filamentDemands.status,
+    isPaused: filamentDemands.isPaused,
     memberName: members.name,
     payerMemberName: payerMembers.name
   })

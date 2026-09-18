@@ -36,6 +36,7 @@ export const filamentDemands = sqliteTable('filament_demands', {
   estimatedUnitPrice: real('estimated_unit_price').notNull().default(16.99),
   actualUnitPrice: real('actual_unit_price'),
   status: text('status', { enum: ['DEMANDE', 'PRIS_EN_CHARGE', 'COMMANDE', 'RECU', 'DISTRIBUE', 'ANNULE'] }).notNull().default('DEMANDE'),
+  isPaused: integer('is_paused', { mode: 'boolean' }).notNull().default(false),
   notes: text('notes'),
   createdAt: text('created_at').notNull(),
   updatedAt: text('updated_at').notNull()

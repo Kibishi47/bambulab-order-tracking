@@ -1,6 +1,6 @@
 import { getDatabase } from '../../database'
 import { groupOrders, members, filamentDemands } from '../../database/schema'
-import { eq, inArray } from 'drizzle-orm'
+import { eq, inArray, and } from 'drizzle-orm'
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
@@ -43,7 +43,7 @@ export default defineEventHandler(async (event) => {
     createdAt: now
   }).returning().all()
 
-  // If demand IDs are attached, link them and update status to COMMANDE
+  // If demand IDs are attached, link only non-paused demands and update status to COMMANDE
   if (Array.isArray(body.demandIds) && body.demandIds.length > 0) {
     const demandIds = body.demandIds.map(Number)
     await db.update(filamentDemands)
@@ -52,7 +52,7 @@ export default defineEventHandler(async (event) => {
         status: 'COMMANDE',
         updatedAt: now
       })
-      .where(inArray(filamentDemands.id, demandIds))
+      .where(and(inArray(filamentDemands.id, demandIds), eq(filamentDemands.isPaused, false)))
       .run()
   }
 

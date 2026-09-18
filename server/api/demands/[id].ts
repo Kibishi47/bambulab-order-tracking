@@ -35,6 +35,7 @@ export default defineEventHandler(async (event) => {
     if (body.filamentType !== undefined) updateData.filamentType = body.filamentType
     if (body.colorName !== undefined) updateData.colorName = body.colorName
     if (body.colorHex !== undefined) updateData.colorHex = body.colorHex
+    if (body.isPaused !== undefined) updateData.isPaused = Boolean(body.isPaused)
     if (body.notes !== undefined) updateData.notes = body.notes
     if (body.groupOrderId !== undefined) updateData.groupOrderId = body.groupOrderId
 

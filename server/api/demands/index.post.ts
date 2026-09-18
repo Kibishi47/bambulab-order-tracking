@@ -37,6 +37,8 @@ export default defineEventHandler(async (event) => {
     payerMemberId = payer.id
   }
 
+  const isPaused = Boolean(body.isPaused)
+
   const now = new Date().toISOString()
   const [newDemand] = await db.insert(filamentDemands).values({
     memberId: member.id,
@@ -50,6 +52,7 @@ export default defineEventHandler(async (event) => {
     estimatedUnitPrice,
     actualUnitPrice: null,
     status: 'DEMANDE',
+    isPaused,
     notes: body.notes?.trim() || null,
     createdAt: now,
     updatedAt: now

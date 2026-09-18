@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { Plus, Edit2, Trash2, Gift } from 'lucide-vue-next'
+import { Plus, Edit2, Trash2, Gift, PauseCircle } from 'lucide-vue-next'
 import Modal from '~/components/Modal.vue'
 import ConfirmModal from '~/components/ui/ConfirmModal.vue'
 import {
@@ -14,14 +14,14 @@ const props = defineProps<{
   members: Array<{ id: number, name: string }>
   initialMemberId?: number
   demandToEdit?: any | null
-}>>()
+}>()
 
 const emit = defineEmits<{
   (e: 'update:modelValue', val: boolean): void
   (e: 'created'): void
   (e: 'updated'): void
   (e: 'deleted'): void
-}>>()
+}>()
 
 const loading = ref(false)
 const errorMessage = ref('')
@@ -29,6 +29,7 @@ const errorMessage = ref('')
 const memberId = ref<number | ''>('')
 const isSponsored = ref(false)
 const payerMemberId = ref<number | ''>('')
+const isPaused = ref(false)
 const filamentType = ref('PLA Basic')
 const format = ref<'RECHARGE' | 'BOBINE'>('RECHARGE')
 const colorName = ref('Bambu Green')
@@ -45,6 +46,7 @@ watch(() => props.modelValue, (isOpen) => {
       memberId.value = props.demandToEdit.memberId
       isSponsored.value = !!props.demandToEdit.payerMemberId
       payerMemberId.value = props.demandToEdit.payerMemberId || ''
+      isPaused.value = Boolean(props.demandToEdit.isPaused)
       filamentType.value = props.demandToEdit.filamentType || 'PLA Basic'
       format.value = props.demandToEdit.format === 'BOBINE' ? 'BOBINE' : 'RECHARGE'
       colorName.value = props.demandToEdit.colorName || ''
@@ -57,6 +59,7 @@ watch(() => props.modelValue, (isOpen) => {
       memberId.value = ''
       isSponsored.value = false
       payerMemberId.value = ''
+      isPaused.value = false
       filamentType.value = 'PLA Basic'
       format.value = 'RECHARGE'
       colorName.value = 'Bambu Green'
@@ -141,6 +144,7 @@ async function submit() {
           quantity: quantity.value,
           estimatedUnitPrice: estimatedUnitPrice.value,
           status: status.value,
+          isPaused: isPaused.value,
           notes: notes.value.trim() || null
         }
       })
@@ -158,6 +162,7 @@ async function submit() {
           colorHex: finalColorHex,
           quantity: quantity.value,
           estimatedUnitPrice: estimatedUnitPrice.value,
+          isPaused: isPaused.value,
           notes: notes.value.trim() || null
         }
       })
@@ -282,6 +287,26 @@ async function executeDelete() {
             Le coût de la bobine et sa quote-part de frais de port seront imputés à ce membre dans le calcul des soldes.
           </p>
         </div>
+      </div>
+
+      <!-- Toggle Gel / Verrouillage d'un besoin -->
+      <div class="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800">
+        <label class="flex items-start gap-3 cursor-pointer select-none">
+          <input
+            v-model="isPaused"
+            type="checkbox"
+            class="mt-0.5 w-4 h-4 rounded border-zinc-300 dark:border-zinc-700 text-amber-500 focus:ring-amber-500 transition-colors"
+          />
+          <div class="space-y-0.5">
+            <div class="flex items-center gap-1.5 text-xs font-semibold text-zinc-800 dark:text-zinc-200">
+              <PauseCircle class="w-3.5 h-3.5 text-amber-500" />
+              <span>Mettre en pause (ne pas commander pour l'instant)</span>
+            </div>
+            <p class="text-[11px] text-zinc-500 dark:text-zinc-400">
+              Le besoin reste visible dans la liste mais ne pourra pas être sélectionné lors d'une commande groupée.
+            </p>
+          </div>
+        </label>
       </div>
 
       <!-- Type de filament -->
