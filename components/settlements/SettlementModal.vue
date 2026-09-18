@@ -3,7 +3,7 @@ import { ref, watch } from 'vue'
 import Modal from '~/components/Modal.vue'
 import DatePicker from '~/components/DatePicker.vue'
 import { PAYMENT_METHODS } from '~/composables/useFilamentColors'
-import { ArrowRight, Check, Calendar, Euro } from 'lucide-vue-next'
+import { ArrowRight, Check, Calendar, Euro, Trash2, Edit2 } from 'lucide-vue-next'
 
 const props = defineProps<{
   modelValue: boolean
@@ -11,11 +11,22 @@ const props = defineProps<{
   prefillPayerId?: number
   prefillReceiverId?: number
   prefillAmount?: number
+  settlementToEdit?: {
+    id: number
+    payerId: number
+    receiverId: number
+    amount: number
+    paymentMethod: string
+    settledAt: string
+    notes?: string | null
+  } | null
 }>()
 
 const emit = defineEmits<{
   (e: 'update:modelValue', val: boolean): void
   (e: 'created'): void
+  (e: 'updated'): void
+  (e: 'deleted'): void
 }>()
 
 const payerId = ref<number | ''>('')
@@ -30,10 +41,21 @@ const errorMessage = ref('')
 watch(() => props.modelValue, (isOpen) => {
   if (isOpen) {
     errorMessage.value = ''
-    payerId.value = props.prefillPayerId || ''
-    receiverId.value = props.prefillReceiverId || ''
-    amount.value = props.prefillAmount || ''
-    paymentMethod.value = 'WERO'
+    if (props.settlementToEdit) {
+      payerId.value = props.settlementToEdit.payerId || ''
+      receiverId.value = props.settlementToEdit.receiverId || ''
+      amount.value = props.settlementToEdit.amount || ''
+      paymentMethod.value = props.settlementToEdit.paymentMethod || 'WERO'
+      settledAt.value = props.settlementToEdit.settledAt || new Date().toISOString().slice(0, 10)
+      notes.value = props.settlementToEdit.notes || ''
+    } else {
+      payerId.value = props.prefillPayerId || ''
+      receiverId.value = props.prefillReceiverId || ''
+      amount.value = props.prefillAmount || ''
+      paymentMethod.value = 'WERO'
+      settledAt.value = new Date().toISOString().slice(0, 10)
+      notes.value = ''
+    }
   }
 })
 
@@ -77,13 +99,33 @@ async function submit() {
     loading.value = false
   }
 }
+
+async function handleDelete() {
+  if (!props.settlementToEdit) return
+  if (!confirm('Êtes-vous sûr de vouloir supprimer ce règlement ?\nLes soldes des membres seront automatiquement recalculés.')) {
+    return
+  }
+
+  loading.value = true
+  errorMessage.value = ''
+
+  try {
+    await $fetch(`/api/settlements/${props.settlementToEdit.id}`, { method: 'DELETE' })
+    emit('deleted')
+    emit('update:modelValue', false)
+  } catch (err: any) {
+    errorMessage.value = err.data?.statusMessage || 'Erreur lors de la suppression du règlement'
+  } finally {
+    loading.value = false
+  }
+}
 </script>
 
 <template>
   <Modal
     :model-value="modelValue"
-    title="Enregistrer un remboursement"
-    description="Consignez un virement ou règlement effectué entre membres pour solder les comptes."
+    :title="settlementToEdit ? 'Détail du remboursement' : 'Enregistrer un remboursement'"
+    :description="settlementToEdit ? 'Consultez ou supprimez ce règlement enregistré.' : 'Consignez un virement ou règlement effectué entre membres pour solder les comptes.'"
     max-width="max-w-xl"
     @update:model-value="emit('update:modelValue', $event)"
   >
@@ -189,22 +231,37 @@ async function submit() {
       </div>
 
       <!-- Actions -->
-      <div class="flex items-center justify-end gap-3 pt-3 border-t border-zinc-200 dark:border-zinc-800">
-        <button
-          type="button"
-          class="px-4 py-2 text-xs font-medium text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white transition-colors"
-          @click="emit('update:modelValue', false)"
-        >
-          Annuler
-        </button>
-        <button
-          type="submit"
-          :disabled="loading"
-          class="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-lg bg-bambu-500 text-white hover:bg-bambu-600 active:scale-95 transition-all shadow-sm disabled:opacity-50"
-        >
-          <Check class="w-4 h-4" />
-          <span>{{ loading ? 'Enregistrement...' : 'Enregistrer le remboursement' }}</span>
-        </button>
+      <div class="flex items-center justify-between gap-3 pt-3 border-t border-zinc-200 dark:border-zinc-800">
+        <div>
+          <button
+            v-if="settlementToEdit"
+            type="button"
+            :disabled="loading"
+            class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg text-red-500 hover:bg-red-500/10 border border-transparent hover:border-red-500/20 transition-all disabled:opacity-50"
+            @click="handleDelete"
+          >
+            <Trash2 class="w-3.5 h-3.5" />
+            <span>Supprimer</span>
+          </button>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <button
+            type="button"
+            class="px-4 py-2 text-xs font-medium text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white transition-colors"
+            @click="emit('update:modelValue', false)"
+          >
+            Annuler
+          </button>
+          <button
+            type="submit"
+            :disabled="loading"
+            class="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-lg bg-bambu-500 text-white hover:bg-bambu-600 active:scale-95 transition-all shadow-sm disabled:opacity-50"
+          >
+            <component :is="settlementToEdit ? Edit2 : Check" class="w-4 h-4" />
+            <span>{{ loading ? 'Enregistrement...' : (settlementToEdit ? 'Mettre à jour' : 'Enregistrer le remboursement') }}</span>
+          </button>
+        </div>
       </div>
     </form>
   </Modal>

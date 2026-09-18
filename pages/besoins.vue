@@ -366,16 +366,6 @@ function getNextStatus(status: string) {
                 <span class="truncate">{{ getNextStatus(d.status)!.label }}</span>
               </button>
             </div>
-
-            <!-- Delete button -->
-            <button
-              type="button"
-              class="p-2 sm:p-1.5 text-zinc-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors flex-shrink-0"
-              title="Supprimer définitivement"
-              @click="deleteDemand(d.id)"
-            >
-              <Trash2 class="w-4 h-4" />
-            </button>
           </div>
         </div>
       </div>
@@ -388,6 +378,7 @@ function getNextStatus(status: string) {
       :demand-to-edit="demandToEdit"
       @created="loadDemands(); if (triggerRefresh) triggerRefresh()"
       @updated="loadDemands(); if (triggerRefresh) triggerRefresh()"
+      @deleted="loadDemands(); if (triggerRefresh) triggerRefresh()"
     />
 
     <OrderModal

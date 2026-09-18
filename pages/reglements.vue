@@ -6,7 +6,7 @@ import {
   Plus,
   ArrowRight,
   CheckCircle2,
-  Trash2,
+  Edit2,
   CreditCard,
   History
 } from 'lucide-vue-next'
@@ -21,6 +21,7 @@ const loading = ref(true)
 
 // Modal
 const settlementModalOpen = ref(false)
+const settlementToEdit = ref<any>(null)
 const prefillPayer = ref<number>()
 const prefillReceiver = ref<number>()
 const prefillAmount = ref<number>()
@@ -52,24 +53,16 @@ onMounted(() => {
 })
 
 function openQuickSettle(fromId: number, toId: number, amount: number) {
+  settlementToEdit.value = null
   prefillPayer.value = fromId
   prefillReceiver.value = toId
   prefillAmount.value = amount
   settlementModalOpen.value = true
 }
 
-async function deleteSettlement(id: number) {
-  if (!confirm('Voulez-vous supprimer ce règlement ? Les soldes des membres seront automatiquement recalculés.')) {
-    return
-  }
-
-  try {
-    await $fetch(`/api/settlements/${id}`, { method: 'DELETE' })
-    loadData()
-    if (triggerRefresh) triggerRefresh()
-  } catch (e) {
-    console.error('Failed to delete settlement', e)
-  }
+function openEditSettlement(s: any) {
+  settlementToEdit.value = s
+  settlementModalOpen.value = true
 }
 </script>
 
@@ -90,7 +83,7 @@ async function deleteSettlement(id: number) {
       <button
         type="button"
         class="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-lg bg-bambu-500 text-white hover:bg-bambu-600 shadow-sm active:scale-95 transition-all"
-        @click="prefillPayer = undefined; prefillReceiver = undefined; prefillAmount = undefined; settlementModalOpen = true"
+        @click="settlementToEdit = null; prefillPayer = undefined; prefillReceiver = undefined; prefillAmount = undefined; settlementModalOpen = true"
       >
         <Plus class="w-4 h-4" />
         <span>Enregistrer un remboursement</span>
@@ -276,17 +269,17 @@ async function deleteSettlement(id: number) {
               </div>
             </div>
 
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2">
               <span class="text-xs font-bold font-mono text-zinc-900 dark:text-zinc-100">
                 {{ s.amount.toFixed(2) }} €
               </span>
               <button
                 type="button"
-                class="p-1.5 text-zinc-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors"
-                title="Supprimer ce virement"
-                @click="deleteSettlement(s.id)"
+                class="p-1.5 text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors"
+                title="Consulter ou supprimer ce virement"
+                @click="openEditSettlement(s)"
               >
-                <Trash2 class="w-3.5 h-3.5" />
+                <Edit2 class="w-3.5 h-3.5" />
               </button>
             </div>
           </div>
@@ -298,10 +291,13 @@ async function deleteSettlement(id: number) {
     <SettlementModal
       v-model="settlementModalOpen"
       :members="members"
+      :settlement-to-edit="settlementToEdit"
       :prefill-payer-id="prefillPayer"
       :prefill-receiver-id="prefillReceiver"
       :prefill-amount="prefillAmount"
       @created="loadData(); if (triggerRefresh) triggerRefresh()"
+      @updated="loadData(); if (triggerRefresh) triggerRefresh()"
+      @deleted="loadData(); if (triggerRefresh) triggerRefresh()"
     />
   </div>
 </template>

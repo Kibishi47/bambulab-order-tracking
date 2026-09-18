@@ -196,19 +196,11 @@ function getMemberBalance(memberId: number) {
           <div class="flex items-center gap-1">
             <button
               type="button"
-              class="p-1 text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors"
+              class="p-1.5 text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors"
               title="Modifier ce membre"
               @click="openEditModal(m)"
             >
               <Edit2 class="w-3.5 h-3.5" />
-            </button>
-            <button
-              type="button"
-              class="p-1 text-zinc-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors"
-              title="Supprimer ce membre"
-              @click="deleteMember(m.id, m.name)"
-            >
-              <Trash2 class="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
@@ -220,6 +212,7 @@ function getMemberBalance(memberId: number) {
       v-model="memberModalOpen"
       :member-to-edit="memberToEdit"
       @saved="loadMembers(); if (triggerRefresh) triggerRefresh()"
+      @deleted="loadMembers(); if (triggerRefresh) triggerRefresh()"
     />
   </div>
 </template>

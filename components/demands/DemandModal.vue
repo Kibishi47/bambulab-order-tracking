@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { Plus, Edit2 } from 'lucide-vue-next'
+import { Plus, Edit2, Trash2 } from 'lucide-vue-next'
 import Modal from '~/components/Modal.vue'
 import {
   BAMBU_FILAMENT_TYPES,
@@ -19,6 +19,7 @@ const emit = defineEmits<{
   (e: 'update:modelValue', val: boolean): void
   (e: 'created'): void
   (e: 'updated'): void
+  (e: 'deleted'): void
 }>()
 
 const loading = ref(false)
@@ -139,6 +140,24 @@ async function submit() {
     emit('update:modelValue', false)
   } catch (err: any) {
     errorMessage.value = err.data?.statusMessage || "Erreur lors de l'enregistrement du besoin"
+  } finally {
+    loading.value = false
+  }
+}
+
+async function handleDelete() {
+  if (!props.demandToEdit) return
+  if (!confirm('Êtes-vous sûr de vouloir supprimer ce besoin ?')) return
+
+  loading.value = true
+  errorMessage.value = ''
+
+  try {
+    await $fetch(`/api/demands/${props.demandToEdit.id}`, { method: 'DELETE' })
+    emit('deleted')
+    emit('update:modelValue', false)
+  } catch (err: any) {
+    errorMessage.value = err.data?.statusMessage || 'Erreur lors de la suppression du besoin'
   } finally {
     loading.value = false
   }
@@ -315,22 +334,37 @@ async function submit() {
       </div>
 
       <!-- Actions -->
-      <div class="flex items-center justify-end gap-3 pt-3 border-t border-zinc-200 dark:border-zinc-800">
-        <button
-          type="button"
-          class="px-4 py-2 text-xs font-medium text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white transition-colors"
-          @click="emit('update:modelValue', false)"
-        >
-          Annuler
-        </button>
-        <button
-          type="submit"
-          :disabled="loading"
-          class="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-lg bg-bambu-500 text-white hover:bg-bambu-600 active:scale-95 transition-all shadow-sm disabled:opacity-50"
-        >
-          <component :is="demandToEdit ? Edit2 : Plus" class="w-4 h-4" />
-          <span>{{ loading ? 'Enregistrement...' : (demandToEdit ? 'Enregistrer les modifications' : 'Ajouter le besoin') }}</span>
-        </button>
+      <div class="flex items-center justify-between gap-3 pt-3 border-t border-zinc-200 dark:border-zinc-800">
+        <div>
+          <button
+            v-if="demandToEdit"
+            type="button"
+            :disabled="loading"
+            class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg text-red-500 hover:bg-red-500/10 border border-transparent hover:border-red-500/20 transition-all disabled:opacity-50"
+            @click="handleDelete"
+          >
+            <Trash2 class="w-3.5 h-3.5" />
+            <span>Supprimer</span>
+          </button>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <button
+            type="button"
+            class="px-4 py-2 text-xs font-medium text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white transition-colors"
+            @click="emit('update:modelValue', false)"
+          >
+            Annuler
+          </button>
+          <button
+            type="submit"
+            :disabled="loading"
+            class="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-lg bg-bambu-500 text-white hover:bg-bambu-600 active:scale-95 transition-all shadow-sm disabled:opacity-50"
+          >
+            <component :is="demandToEdit ? Edit2 : Plus" class="w-4 h-4" />
+            <span>{{ loading ? 'Enregistrement...' : (demandToEdit ? 'Enregistrer les modifications' : 'Ajouter le besoin') }}</span>
+          </button>
+        </div>
       </div>
     </form>
   </Modal>
