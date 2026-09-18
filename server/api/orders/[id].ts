@@ -1,6 +1,7 @@
 import { getDatabase } from '../../database'
 import { groupOrders, members, filamentDemands, settlements } from '../../database/schema'
 import { eq } from 'drizzle-orm'
+import { alias } from 'drizzle-orm/sqlite-core'
 
 export default defineEventHandler(async (event) => {
   const id = Number(getRouterParam(event, 'id'))
@@ -12,6 +13,8 @@ export default defineEventHandler(async (event) => {
   const method = getMethod(event)
 
   if (method === 'GET') {
+    const payerMembers = alias(members, 'payer_members')
+
     const [order] = await db.select({
       id: groupOrders.id,
       orderNumber: groupOrders.orderNumber,
@@ -40,6 +43,7 @@ export default defineEventHandler(async (event) => {
     const orderDemands = await db.select({
       id: filamentDemands.id,
       memberId: filamentDemands.memberId,
+      payerMemberId: filamentDemands.payerMemberId,
       groupOrderId: filamentDemands.groupOrderId,
       filamentType: filamentDemands.filamentType,
       format: filamentDemands.format,
@@ -51,10 +55,12 @@ export default defineEventHandler(async (event) => {
       status: filamentDemands.status,
       notes: filamentDemands.notes,
       memberName: members.name,
-      memberEmail: members.email
+      memberEmail: members.email,
+      payerMemberName: payerMembers.name
     })
     .from(filamentDemands)
     .leftJoin(members, eq(filamentDemands.memberId, members.id))
+    .leftJoin(payerMembers, eq(filamentDemands.payerMemberId, payerMembers.id))
     .where(eq(filamentDemands.groupOrderId, id))
     .all()
 
@@ -90,9 +96,12 @@ export default defineEventHandler(async (event) => {
       const cost = d.quantity * unitPrice
       totalFilamentsValue += cost
 
-      const current = memberBreakdownMap.get(d.memberId) || {
-        memberId: d.memberId,
-        memberName: d.memberName || 'Membre inconnu',
+      const debtorId = d.payerMemberId || d.memberId
+      const debtorName = d.payerMemberId ? (d.payerMemberName || 'Membre payeur') : (d.memberName || 'Membre inconnu')
+
+      const current = memberBreakdownMap.get(debtorId) || {
+        memberId: debtorId,
+        memberName: debtorName,
         itemsCount: 0,
         spoolsCount: 0,
         filamentCost: 0,
@@ -102,7 +111,7 @@ export default defineEventHandler(async (event) => {
       current.itemsCount += 1
       current.spoolsCount += d.quantity
       current.filamentCost += cost
-      memberBreakdownMap.set(d.memberId, current)
+      memberBreakdownMap.set(debtorId, current)
     }
 
     const participantsCount = memberBreakdownMap.size

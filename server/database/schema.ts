@@ -26,6 +26,7 @@ export const groupOrders = sqliteTable('group_orders', {
 export const filamentDemands = sqliteTable('filament_demands', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   memberId: integer('member_id').notNull().references(() => members.id, { onDelete: 'cascade' }),
+  payerMemberId: integer('payer_member_id').references(() => members.id, { onDelete: 'set null' }),
   groupOrderId: integer('group_order_id').references(() => groupOrders.id, { onDelete: 'set null' }),
   filamentType: text('filament_type').notNull(),
   format: text('format', { enum: ['RECHARGE', 'BOBINE'] }).notNull().default('RECHARGE'),
@@ -54,7 +55,8 @@ export const settlements = sqliteTable('settlements', {
 
 // Relations
 export const membersRelations = relations(members, ({ many }) => ({
-  demands: many(filamentDemands),
+  demands: many(filamentDemands, { relationName: 'demands' }),
+  sponsoredDemands: many(filamentDemands, { relationName: 'sponsoredDemands' }),
   ordersBought: many(groupOrders),
   settlementsPaid: many(settlements, { relationName: 'payer' }),
   settlementsReceived: many(settlements, { relationName: 'receiver' })
@@ -72,7 +74,13 @@ export const groupOrdersRelations = relations(groupOrders, ({ one, many }) => ({
 export const filamentDemandsRelations = relations(filamentDemands, ({ one }) => ({
   member: one(members, {
     fields: [filamentDemands.memberId],
-    references: [members.id]
+    references: [members.id],
+    relationName: 'demands'
+  }),
+  payerMember: one(members, {
+    fields: [filamentDemands.payerMemberId],
+    references: [members.id],
+    relationName: 'sponsoredDemands'
   }),
   groupOrder: one(groupOrders, {
     fields: [filamentDemands.groupOrderId],

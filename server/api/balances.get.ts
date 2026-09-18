@@ -49,7 +49,8 @@ export default defineEventHandler(async () => {
       const price = d.actualUnitPrice ?? d.estimatedUnitPrice
       const cost = d.quantity * price
       orderFilamentsTotal += cost
-      orderParticipants.set(d.memberId, (orderParticipants.get(d.memberId) || 0) + cost)
+      const debtorId = d.payerMemberId || d.memberId
+      orderParticipants.set(debtorId, (orderParticipants.get(debtorId) || 0) + cost)
     }
 
     const participantsCount = orderParticipants.size

@@ -18,6 +18,7 @@ export default defineEventHandler(async (event) => {
     }
 
     const demandsList = await db.select().from(filamentDemands).where(eq(filamentDemands.memberId, id)).all()
+    const sponsoredDemandsList = await db.select().from(filamentDemands).where(eq(filamentDemands.payerMemberId, id)).all()
     const ordersBought = await db.select().from(groupOrders).where(eq(groupOrders.buyerId, id)).all()
     const settlementsList = await db.select().from(settlements).where(
       or(eq(settlements.payerId, id), eq(settlements.receiverId, id))
@@ -26,6 +27,7 @@ export default defineEventHandler(async (event) => {
     return {
       ...member,
       demands: demandsList,
+      sponsoredDemands: sponsoredDemandsList,
       ordersBought,
       settlements: settlementsList
     }

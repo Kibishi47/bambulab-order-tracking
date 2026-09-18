@@ -1,10 +1,13 @@
 import { getDatabase } from '../../database'
 import { filamentDemands, members, groupOrders } from '../../database/schema'
 import { desc, eq, and } from 'drizzle-orm'
+import { alias } from 'drizzle-orm/sqlite-core'
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event)
   const { db } = getDatabase()
+
+  const payerMembers = alias(members, 'payer_members')
 
   const conditions = []
 
@@ -29,6 +32,7 @@ export default defineEventHandler(async (event) => {
   let items = await db.select({
     id: filamentDemands.id,
     memberId: filamentDemands.memberId,
+    payerMemberId: filamentDemands.payerMemberId,
     groupOrderId: filamentDemands.groupOrderId,
     filamentType: filamentDemands.filamentType,
     format: filamentDemands.format,
@@ -42,10 +46,12 @@ export default defineEventHandler(async (event) => {
     createdAt: filamentDemands.createdAt,
     updatedAt: filamentDemands.updatedAt,
     memberName: members.name,
+    payerMemberName: payerMembers.name,
     orderNumber: groupOrders.orderNumber
   })
   .from(filamentDemands)
   .leftJoin(members, eq(filamentDemands.memberId, members.id))
+  .leftJoin(payerMembers, eq(filamentDemands.payerMemberId, payerMembers.id))
   .leftJoin(groupOrders, eq(filamentDemands.groupOrderId, groupOrders.id))
   .orderBy(desc(filamentDemands.createdAt))
   .all()

@@ -28,9 +28,19 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'Membre introuvable' })
   }
 
+  let payerMemberId: number | null = null
+  if (body.payerMemberId) {
+    const [payer] = await db.select().from(members).where(eq(members.id, Number(body.payerMemberId))).all()
+    if (!payer) {
+      throw createError({ statusCode: 400, statusMessage: 'Membre payeur introuvable' })
+    }
+    payerMemberId = payer.id
+  }
+
   const now = new Date().toISOString()
   const [newDemand] = await db.insert(filamentDemands).values({
     memberId: member.id,
+    payerMemberId,
     groupOrderId: null,
     filamentType: body.filamentType.trim(),
     format,

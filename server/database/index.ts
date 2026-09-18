@@ -58,6 +58,7 @@ function initSchema(sqlite: Database.Database) {
     CREATE TABLE IF NOT EXISTS filament_demands (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       member_id INTEGER NOT NULL REFERENCES members(id) ON DELETE CASCADE,
+      payer_member_id INTEGER REFERENCES members(id) ON DELETE SET NULL,
       group_order_id INTEGER REFERENCES group_orders(id) ON DELETE SET NULL,
       filament_type TEXT NOT NULL,
       format TEXT NOT NULL DEFAULT 'RECHARGE',
@@ -87,6 +88,12 @@ function initSchema(sqlite: Database.Database) {
 
   try {
     sqlite.exec(`ALTER TABLE group_orders ADD COLUMN shipping_split_method TEXT NOT NULL DEFAULT 'EQUITABLE';`)
+  } catch {
+    // Column already exists
+  }
+
+  try {
+    sqlite.exec(`ALTER TABLE filament_demands ADD COLUMN payer_member_id INTEGER REFERENCES members(id) ON DELETE SET NULL;`)
   } catch {
     // Column already exists
   }
