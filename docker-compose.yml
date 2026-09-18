@@ -8,10 +8,10 @@ services:
     expose:
       - "3000"
     environment:
-      - NODE_ENV=production
-      - HOST=0.0.0.0
-      - PORT=3000
-      - DATABASE_PATH=/app/data/bambulab.db
+      DATABASE_PATH: /app/data/bambulab.db
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: 3000
     volumes:
       - ./data:/app/data
     healthcheck:

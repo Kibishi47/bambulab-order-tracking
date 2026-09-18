@@ -30,7 +30,7 @@ WORKDIR /app
 RUN apk add --no-cache curl libstdc++
 
 # Create persistent database folder and set permissions
-RUN mkdir -p /app/data && chown -R node:node /app
+RUN mkdir -p /app/data && chown -R node:node /app/data && chmod 777 /app/data && chown -R node:node /app
 
 # Copy production output from builder
 COPY --from=builder --chown=node:node /app/.output /app/.output

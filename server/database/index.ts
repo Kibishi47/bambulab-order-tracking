@@ -11,13 +11,15 @@ let _sqlite: Database.Database | null = null
 export function getDatabase() {
   if (_db) return { db: _db, sqlite: _sqlite! }
 
-  const dbPath = process.env.DATABASE_PATH || path.resolve(process.cwd(), 'data/bambulab.db')
-  const dir = path.dirname(dbPath)
+  const rawPath = process.env.DATABASE_PATH || './data/bambulab.db'
+  const dbPath = path.isAbsolute(rawPath) ? path.resolve(rawPath) : path.resolve(process.cwd(), rawPath)
+  const dbDir = path.dirname(dbPath)
 
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true })
+  if (!fs.existsSync(dbDir)) {
+    fs.mkdirSync(dbDir, { recursive: true })
   }
 
+  console.log(`📦 Base SQLite connectée : ${dbPath}`)
   const sqlite = new Database(dbPath)
   sqlite.pragma('journal_mode = WAL')
   sqlite.pragma('foreign_keys = ON')
