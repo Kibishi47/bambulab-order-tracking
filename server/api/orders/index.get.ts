@@ -22,7 +22,21 @@ export default defineEventHandler(async () => {
   .orderBy(desc(groupOrders.purchaseDate), desc(groupOrders.createdAt))
   .all()
 
-  const allDemands = await db.select().from(filamentDemands).all()
+  const allDemands = await db.select({
+    id: filamentDemands.id,
+    memberId: filamentDemands.memberId,
+    groupOrderId: filamentDemands.groupOrderId,
+    filamentType: filamentDemands.filamentType,
+    format: filamentDemands.format,
+    colorName: filamentDemands.colorName,
+    colorHex: filamentDemands.colorHex,
+    quantity: filamentDemands.quantity,
+    status: filamentDemands.status,
+    memberName: members.name
+  })
+  .from(filamentDemands)
+  .leftJoin(members, eq(filamentDemands.memberId, members.id))
+  .all()
 
   return orders.map(order => {
     const orderDemands = allDemands.filter(d => d.groupOrderId === order.id)
@@ -30,7 +44,8 @@ export default defineEventHandler(async () => {
     return {
       ...order,
       itemCount: orderDemands.length,
-      totalSpools
+      totalSpools,
+      demands: orderDemands
     }
   })
 })

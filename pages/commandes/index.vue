@@ -2,6 +2,7 @@
 import { ref, onMounted, inject, type Ref, computed } from 'vue'
 import StatusBadge from '~/components/StatusBadge.vue'
 import OrderModal from '~/components/orders/OrderModal.vue'
+import OrderCascadeModal from '~/components/orders/OrderCascadeModal.vue'
 import {
   Package,
   Plus,
@@ -19,6 +20,11 @@ const members = ref<any[]>([])
 const demands = ref<any[]>([])
 const loading = ref(true)
 const orderModalOpen = ref(false)
+
+const cascadeModalOpen = ref(false)
+const selectedOrderForCascade = ref<any>(null)
+const cascadeAction = ref<'RECEIVE' | 'DISTRIBUTE'>('RECEIVE')
+const cascadeLoading = ref(false)
 
 async function loadOrders() {
   loading.value = true
@@ -38,16 +44,27 @@ async function loadOrders() {
   }
 }
 
-async function triggerCascade(orderId: number, action: 'RECEIVE' | 'DISTRIBUTE') {
+function promptCascade(order: any, action: 'RECEIVE' | 'DISTRIBUTE') {
+  selectedOrderForCascade.value = order
+  cascadeAction.value = action
+  cascadeModalOpen.value = true
+}
+
+async function executeCascade() {
+  if (!selectedOrderForCascade.value) return
+  cascadeLoading.value = true
   try {
-    await $fetch(`/api/orders/${orderId}/cascade`, {
+    await $fetch(`/api/orders/${selectedOrderForCascade.value.id}/cascade`, {
       method: 'POST',
-      body: { action }
+      body: { action: cascadeAction.value }
     })
+    cascadeModalOpen.value = false
     await loadOrders()
     if (triggerRefresh) triggerRefresh()
   } catch (e) {
     console.error('Failed to execute cascade action', e)
+  } finally {
+    cascadeLoading.value = false
   }
 }
 
@@ -148,23 +165,23 @@ const pendingDemands = computed(() => {
           </div>
 
           <div class="flex items-center justify-between sm:justify-end gap-2">
-            <!-- Action rapide en cascade : Marquer comme reçue -->
+            <!-- Action rapide en cascade : Marquer comme reçue (avec confirmation transparente) -->
             <button
               v-if="o.status !== 'LIVRE' && o.status !== 'CLOTURE'"
               type="button"
               class="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium rounded-lg bg-cyan-50 text-cyan-800 dark:bg-cyan-950/60 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800 hover:bg-cyan-100 dark:hover:bg-cyan-900 transition-colors active:scale-95"
-              @click.prevent.stop="triggerCascade(o.id, 'RECEIVE')"
+              @click.prevent.stop="promptCascade(o, 'RECEIVE')"
             >
               <Truck class="w-3 h-3" />
               <span>Marquer reçue</span>
             </button>
 
-            <!-- Action rapide en cascade : Marquer comme distribuée -->
+            <!-- Action rapide en cascade : Marquer comme distribuée (avec confirmation transparente) -->
             <button
               v-if="o.status === 'LIVRE'"
               type="button"
               class="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium rounded-lg bg-emerald-50 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 dark:hover:bg-emerald-900 transition-colors active:scale-95"
-              @click.prevent.stop="triggerCascade(o.id, 'DISTRIBUTE')"
+              @click.prevent.stop="promptCascade(o, 'DISTRIBUTE')"
             >
               <CheckCheck class="w-3 h-3" />
               <span>Marquer distribuée</span>
@@ -185,6 +202,16 @@ const pendingDemands = computed(() => {
       :members="members"
       :pending-demands="pendingDemands"
       @created="loadOrders(); if (triggerRefresh) triggerRefresh()"
+    />
+
+    <!-- Order Cascade Modal explicatif -->
+    <OrderCascadeModal
+      v-if="selectedOrderForCascade"
+      v-model="cascadeModalOpen"
+      :order="selectedOrderForCascade"
+      :action="cascadeAction"
+      :loading="cascadeLoading"
+      @confirm="executeCascade"
     />
   </div>
 </template>

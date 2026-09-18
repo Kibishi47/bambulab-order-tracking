@@ -4,6 +4,7 @@ import BadgeFilament from '~/components/BadgeFilament.vue'
 import StatusBadge from '~/components/StatusBadge.vue'
 import SettlementModal from '~/components/settlements/SettlementModal.vue'
 import OrderEditModal from '~/components/orders/OrderEditModal.vue'
+import OrderCascadeModal from '~/components/orders/OrderCascadeModal.vue'
 import { ORDER_STATUSES } from '~/composables/useFilamentColors'
 import {
   Package,
@@ -26,6 +27,8 @@ const order = ref<any>(null)
 const loading = ref(true)
 const updatingStatus = ref(false)
 const cascadeLoading = ref(false)
+const cascadeModalOpen = ref(false)
+const cascadeAction = ref<'RECEIVE' | 'DISTRIBUTE'>('RECEIVE')
 const orderEditModalOpen = ref(false)
 
 // Settlement modal
@@ -72,13 +75,19 @@ async function onStatusChange(newStatus: string) {
   }
 }
 
-async function triggerCascade(action: 'RECEIVE' | 'DISTRIBUTE') {
+function promptCascade(action: 'RECEIVE' | 'DISTRIBUTE') {
+  cascadeAction.value = action
+  cascadeModalOpen.value = true
+}
+
+async function executeCascade() {
   cascadeLoading.value = true
   try {
     await $fetch(`/api/orders/${orderId}/cascade`, {
       method: 'POST',
-      body: { action }
+      body: { action: cascadeAction.value }
     })
+    cascadeModalOpen.value = false
     await loadOrder()
     if (triggerRefresh) triggerRefresh()
   } catch (e) {
@@ -109,25 +118,23 @@ function openSettleForMember(memberId: number, amount: number) {
       </NuxtLink>
 
       <div class="flex items-center gap-2 flex-wrap">
-        <!-- Action rapide : Marquer comme reçue (cascade) -->
+        <!-- Action rapide : Marquer comme reçue (cascade avec modal explicatif) -->
         <button
           v-if="order && order.status !== 'LIVRE' && order.status !== 'CLOTURE'"
           type="button"
-          :disabled="cascadeLoading"
-          class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-semibold shadow-sm active:scale-95 transition-all disabled:opacity-50"
-          @click="triggerCascade('RECEIVE')"
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-semibold shadow-sm active:scale-95 transition-all"
+          @click="promptCascade('RECEIVE')"
         >
           <Truck class="w-3.5 h-3.5" />
           <span>Marquer comme reçue</span>
         </button>
 
-        <!-- Action rapide : Marquer comme distribuée (cascade) -->
+        <!-- Action rapide : Marquer comme distribuée (cascade avec modal explicatif) -->
         <button
           v-if="order && order.status === 'LIVRE'"
           type="button"
-          :disabled="cascadeLoading"
-          class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-sm active:scale-95 transition-all disabled:opacity-50"
-          @click="triggerCascade('DISTRIBUTE')"
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-sm active:scale-95 transition-all"
+          @click="promptCascade('DISTRIBUTE')"
         >
           <CheckCheck class="w-3.5 h-3.5" />
           <span>Marquer comme distribuée</span>
@@ -337,6 +344,16 @@ function openSettleForMember(memberId: number, amount: number) {
       :members="members"
       @updated="loadOrder(); if (triggerRefresh) triggerRefresh()"
       @deleted="if (triggerRefresh) triggerRefresh(); router.push('/commandes')"
+    />
+
+    <!-- Order Cascade Modal explicatif -->
+    <OrderCascadeModal
+      v-if="order"
+      v-model="cascadeModalOpen"
+      :order="order"
+      :action="cascadeAction"
+      :loading="cascadeLoading"
+      @confirm="executeCascade"
     />
   </div>
 </template>
