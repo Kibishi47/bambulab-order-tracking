@@ -1,8 +1,9 @@
 import { getDatabase } from '../../database'
-import { filamentDemands, members } from '../../database/schema'
+import { filamentDemands, members, type Need } from '../../database/schema'
 import { eq } from 'drizzle-orm'
+import { NeedStatus, FilamentFormat } from '../../../types'
 
-export default defineEventHandler(async (event) => {
+export default defineEventHandler(async (event): Promise<Need> => {
   const body = await readBody(event)
 
   if (!body.memberId) {
@@ -18,7 +19,7 @@ export default defineEventHandler(async (event) => {
   const colorHex = (body.colorHex && typeof body.colorHex === 'string') ? body.colorHex.trim() : '#71717a'
   const quantity = Math.max(1, parseInt(body.quantity) || 1)
   const estimatedUnitPrice = Math.max(0, parseFloat(body.estimatedUnitPrice) || 16.99)
-  const format = body.format === 'BOBINE' ? 'BOBINE' : 'RECHARGE'
+  const format = body.format === FilamentFormat.SPOOL ? FilamentFormat.SPOOL : FilamentFormat.REFILL
 
   const { db } = getDatabase()
 
@@ -51,7 +52,7 @@ export default defineEventHandler(async (event) => {
     quantity,
     estimatedUnitPrice,
     actualUnitPrice: null,
-    status: 'DEMANDE',
+    status: NeedStatus.REQUESTED,
     isPaused,
     notes: body.notes?.trim() || null,
     createdAt: now,

@@ -1,8 +1,9 @@
 import { getDatabase } from '../../database'
-import { groupOrders, members, filamentDemands } from '../../database/schema'
+import { groupOrders, members, filamentDemands, type Order } from '../../database/schema'
 import { eq, inArray, and } from 'drizzle-orm'
+import { OrderStatus, NeedStatus, ShippingSplitMode } from '../../../types'
 
-export default defineEventHandler(async (event) => {
+export default defineEventHandler(async (event): Promise<Order> => {
   const body = await readBody(event)
 
   if (!body.orderNumber || typeof body.orderNumber !== 'string' || body.orderNumber.trim().length === 0) {
@@ -29,13 +30,13 @@ export default defineEventHandler(async (event) => {
   const now = new Date().toISOString()
   const totalAmount = Math.max(0, parseFloat(body.totalAmount))
   const shippingFee = Math.max(0, parseFloat(body.shippingFee) || 0)
-  const shippingSplitMethod = body.shippingSplitMethod === 'PRORATA' ? 'PRORATA' : 'EQUITABLE'
+  const shippingSplitMethod = body.shippingSplitMethod === ShippingSplitMode.PRO_RATA ? ShippingSplitMode.PRO_RATA : ShippingSplitMode.EQUAL
 
   const [newOrder] = await db.insert(groupOrders).values({
     orderNumber: body.orderNumber.trim(),
     buyerId: buyer.id,
     purchaseDate: body.purchaseDate,
-    status: body.status || 'COMMANDE',
+    status: body.status || OrderStatus.ORDERED,
     totalAmount,
     shippingFee,
     shippingSplitMethod,
@@ -49,7 +50,7 @@ export default defineEventHandler(async (event) => {
     await db.update(filamentDemands)
       .set({
         groupOrderId: newOrder.id,
-        status: 'COMMANDE',
+        status: NeedStatus.ORDERED,
         updatedAt: now
       })
       .where(and(inArray(filamentDemands.id, demandIds), eq(filamentDemands.isPaused, false)))

@@ -1,8 +1,9 @@
 import { getDatabase } from '../../database'
-import { settlements, members } from '../../database/schema'
+import { settlements, members, type Payment } from '../../database/schema'
 import { eq } from 'drizzle-orm'
+import { PaymentMethod } from '../../../types'
 
-export default defineEventHandler(async (event) => {
+export default defineEventHandler(async (event): Promise<Payment> => {
   const body = await readBody(event)
 
   if (!body.payerId) {
@@ -37,7 +38,7 @@ export default defineEventHandler(async (event) => {
     receiverId: receiver.id,
     groupOrderId: body.groupOrderId ? Number(body.groupOrderId) : null,
     amount: parseFloat(body.amount),
-    paymentMethod: body.paymentMethod || 'LYDIA',
+    paymentMethod: body.paymentMethod || PaymentMethod.WERO,
     settledAt: body.settledAt,
     notes: body.notes?.trim() || null,
     createdAt: now

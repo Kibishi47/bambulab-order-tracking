@@ -2,8 +2,9 @@ import { getDatabase } from '../../database'
 import { groupOrders, members, filamentDemands } from '../../database/schema'
 import { desc, eq } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/sqlite-core'
+import type { GroupOrderDTO } from '../../../types'
 
-export default defineEventHandler(async () => {
+export default defineEventHandler(async (): Promise<GroupOrderDTO[]> => {
   const { db } = getDatabase()
 
   const payerMembers = alias(members, 'payer_members')

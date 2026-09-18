@@ -1,9 +1,10 @@
 import { getDatabase } from '../../database'
 import { filamentDemands, members, groupOrders } from '../../database/schema'
-import { desc, eq, and } from 'drizzle-orm'
+import { desc, eq } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/sqlite-core'
+import { NeedStatus, type FilamentDemandDTO } from '../../../types'
 
-export default defineEventHandler(async (event) => {
+export default defineEventHandler(async (event): Promise<FilamentDemandDTO[]> => {
   const query = getQuery(event)
   const { db } = getDatabase()
 
@@ -12,7 +13,7 @@ export default defineEventHandler(async (event) => {
   const conditions = []
 
   if (query.status) {
-    conditions.push(eq(filamentDemands.status, query.status as any))
+    conditions.push(eq(filamentDemands.status, query.status as NeedStatus))
   }
   if (query.memberId) {
     conditions.push(eq(filamentDemands.memberId, Number(query.memberId)))

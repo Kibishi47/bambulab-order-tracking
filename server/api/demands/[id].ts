@@ -1,8 +1,8 @@
 import { getDatabase } from '../../database'
-import { filamentDemands } from '../../database/schema'
+import { filamentDemands, type Need } from '../../database/schema'
 import { eq } from 'drizzle-orm'
 
-export default defineEventHandler(async (event) => {
+export default defineEventHandler(async (event): Promise<Need | { success: boolean; deletedId: number }> => {
   const id = Number(getRouterParam(event, 'id'))
   if (!id || isNaN(id)) {
     throw createError({ statusCode: 400, statusMessage: 'ID besoin invalide' })

@@ -1,6 +1,7 @@
 import { getDatabase } from '../../../database'
 import { groupOrders } from '../../../database/schema'
 import { eq } from 'drizzle-orm'
+import { OrderStatus, NeedStatus, type CascadeAction } from '../../../../types'
 
 export default defineEventHandler(async (event) => {
   const id = Number(getRouterParam(event, 'id'))
@@ -9,7 +10,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const body = await readBody(event)
-  const action = body?.action as 'RECEIVE' | 'DISTRIBUTE' | undefined
+  const action = body?.action as CascadeAction | undefined
 
   if (!action || !['RECEIVE', 'DISTRIBUTE'].includes(action)) {
     throw createError({ statusCode: 400, statusMessage: 'Action invalide. Choix possibles : RECEIVE, DISTRIBUTE' })
@@ -29,13 +30,13 @@ export default defineEventHandler(async (event) => {
   let requiredPreviousStatus: string
 
   if (action === 'RECEIVE') {
-    targetOrderStatus = 'LIVRE'
-    targetDemandStatus = 'RECU'
-    requiredPreviousStatus = 'COMMANDE'
+    targetOrderStatus = OrderStatus.DELIVERED
+    targetDemandStatus = NeedStatus.RECEIVED
+    requiredPreviousStatus = NeedStatus.ORDERED
   } else {
-    targetOrderStatus = 'CLOTURE'
-    targetDemandStatus = 'DISTRIBUE'
-    requiredPreviousStatus = 'RECU'
+    targetOrderStatus = OrderStatus.CLOSED
+    targetDemandStatus = NeedStatus.DISTRIBUTED
+    requiredPreviousStatus = NeedStatus.RECEIVED
   }
 
   // Execute in an atomic SQLite transaction

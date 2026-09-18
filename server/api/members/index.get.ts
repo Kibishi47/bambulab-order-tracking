@@ -1,8 +1,9 @@
 import { getDatabase } from '../../database'
 import { members, filamentDemands, groupOrders } from '../../database/schema'
-import { desc, eq } from 'drizzle-orm'
+import { desc } from 'drizzle-orm'
+import { NeedStatus, type MemberWithStatsDTO } from '../../../types'
 
-export default defineEventHandler(async () => {
+export default defineEventHandler(async (): Promise<MemberWithStatsDTO[]> => {
   const { db } = getDatabase()
   const allMembers = await db.select().from(members).orderBy(desc(members.createdAt)).all()
 
@@ -16,7 +17,7 @@ export default defineEventHandler(async () => {
     return {
       ...m,
       demandsCount: memberDemands.length,
-      pendingDemandsCount: memberDemands.filter(d => d.status === 'DEMANDE' || d.status === 'PRIS_EN_CHARGE').length,
+      pendingDemandsCount: memberDemands.filter(d => d.status === NeedStatus.REQUESTED || d.status === NeedStatus.ASSIGNED).length,
       ordersBoughtCount: ordersBought.length
     }
   })

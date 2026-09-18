@@ -1,5 +1,6 @@
 import { getDatabase } from '../database'
 import { members, groupOrders, filamentDemands, settlements } from '../database/schema'
+import { NeedStatus, OrderStatus, type BalancesResponseDTO } from '../../types'
 
 export interface MemberBalance {
   memberId: number
@@ -23,7 +24,7 @@ export interface SimplifiedDebt {
   amount: number
 }
 
-export default defineEventHandler(async () => {
+export default defineEventHandler(async (): Promise<BalancesResponseDTO> => {
   const { db } = getDatabase()
 
   const allMembers = await db.select().from(members).all()
@@ -32,7 +33,7 @@ export default defineEventHandler(async () => {
   const allSettlements = await db.select().from(settlements).all()
 
   // Precompute member consumption for all orders including shipping fee split
-  const activeStatuses = ['COMMANDE', 'RECU', 'DISTRIBUE']
+  const activeStatuses = [NeedStatus.ORDERED, NeedStatus.RECEIVED, NeedStatus.DISTRIBUTED]
   const memberConsumptionMap = new Map<number, number>()
   for (const m of allMembers) {
     memberConsumptionMap.set(m.id, 0)
@@ -159,8 +160,8 @@ export default defineEventHandler(async () => {
   // Global metrics
   const totalOrdersAmount = allOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0)
   const totalSettled = allSettlements.reduce((sum, s) => sum + (s.amount || 0), 0)
-  const pendingDemandsCount = allDemands.filter(d => d.status === 'DEMANDE' || d.status === 'PRIS_EN_CHARGE').length
-  const activeOrdersCount = allOrders.filter(o => o.status !== 'CLOTURE').length
+  const pendingDemandsCount = allDemands.filter(d => d.status === NeedStatus.REQUESTED || d.status === NeedStatus.ASSIGNED).length
+  const activeOrdersCount = allOrders.filter(o => o.status !== OrderStatus.CLOSED).length
 
   return {
     membersBalances,

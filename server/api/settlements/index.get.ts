@@ -2,8 +2,9 @@ import { getDatabase } from '../../database'
 import { settlements, members, groupOrders } from '../../database/schema'
 import { desc, eq } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/sqlite-core'
+import type { SettlementDTO } from '../../../types'
 
-export default defineEventHandler(async () => {
+export default defineEventHandler(async (): Promise<SettlementDTO[]> => {
   const { db } = getDatabase()
 
   const payers = alias(members, 'payers')

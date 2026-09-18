@@ -1,7 +1,8 @@
 import { getDatabase } from '../../database'
 import { members } from '../../database/schema'
+import type { MemberDTO } from '../../../types'
 
-export default defineEventHandler(async (event) => {
+export default defineEventHandler(async (event): Promise<MemberDTO> => {
   const body = await readBody(event)
 
   if (!body.name || typeof body.name !== 'string' || body.name.trim().length === 0) {
