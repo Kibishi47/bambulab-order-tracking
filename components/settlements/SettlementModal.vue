@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import Modal from '~/components/Modal.vue'
+import DatePicker from '~/components/DatePicker.vue'
 import { PAYMENT_METHODS } from '~/composables/useFilamentColors'
 import { ArrowRight, Check, Calendar, Euro } from 'lucide-vue-next'
 
@@ -166,15 +167,11 @@ async function submit() {
         <label class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider mb-1.5">
           Date du règlement *
         </label>
-        <div class="relative">
-          <Calendar class="w-4 h-4 text-zinc-400 absolute left-3 top-2.5" />
-          <input
-            v-model="settledAt"
-            type="date"
-            required
-            class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg pl-9 pr-3 py-2 text-xs text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-bambu-500"
-          />
-        </div>
+        <DatePicker
+          v-model="settledAt"
+          required
+          placeholder="Sélectionner la date du règlement"
+        />
       </div>
 
       <!-- Notes -->
