@@ -149,7 +149,7 @@ const pendingDemands = computed(() => {
               {{ o.totalAmount.toFixed(2) }} €
             </span>
             <span class="block text-[11px] text-zinc-400">
-              {{ o.totalSpools }} bobine(s)
+              {{ o.totalSpools }} bobine(s) • {{ o.itemCount }} besoin(s)
             </span>
           </div>
         </div>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, inject, type Ref } from 'vue'
+import { ref, computed, onMounted, inject, type Ref } from 'vue'
 import BadgeFilament from '~/components/BadgeFilament.vue'
 import StatusBadge from '~/components/StatusBadge.vue'
 import SettlementModal from '~/components/settlements/SettlementModal.vue'
@@ -54,6 +54,10 @@ async function loadOrder() {
     loading.value = false
   }
 }
+
+const totalOrderSpools = computed(() => {
+  return order.value?.demands?.reduce((sum: number, d: any) => sum + d.quantity, 0) || 0
+})
 
 onMounted(() => {
   loadOrder()
@@ -207,9 +211,9 @@ function openSettleForMember(memberId: number, amount: number) {
           <div class="p-3 rounded-lg bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800/80">
             <span class="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold">Volume</span>
             <p class="text-xl font-bold font-mono text-zinc-900 dark:text-zinc-100 mt-0.5">
-              {{ order.demands?.reduce((sum: number, d: any) => sum + d.quantity, 0) || 0 }} bobines
+              {{ totalOrderSpools }} bobine(s)
             </p>
-            <span class="text-[10px] text-zinc-400">{{ order.demands?.length || 0 }} article(s)</span>
+            <span class="text-[10px] text-zinc-400">{{ order.demands?.length || 0 }} besoin(s)</span>
           </div>
         </div>
 
@@ -250,7 +254,7 @@ function openSettleForMember(memberId: number, amount: number) {
                   </span>
                 </div>
                 <p class="text-[11px] text-zinc-500 dark:text-zinc-400">
-                  {{ b.spoolsCount }} bobine(s)
+                  {{ b.spoolsCount }} bobine(s) • {{ b.itemsCount }} besoin(s)
                 </p>
               </div>
             </div>
@@ -285,12 +289,12 @@ function openSettleForMember(memberId: number, amount: number) {
         </div>
       </div>
 
-      <!-- Articles inclus dans ce panier -->
+      <!-- Besoins inclus dans ce panier -->
       <div class="space-y-3">
         <div class="flex items-center gap-2">
           <Layers class="w-4 h-4 text-bambu-500" />
           <h2 class="text-sm font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">
-            Articles inclus ({{ order.demands?.length || 0 }})
+            Besoins inclus ({{ order.demands?.length || 0 }} besoin(s) • {{ totalOrderSpools }} bobine(s))
           </h2>
         </div>
 
@@ -312,7 +316,7 @@ function openSettleForMember(memberId: number, amount: number) {
                   <span>Offert par <strong>{{ d.payerMemberName }}</strong></span>
                 </span>
                 <span class="text-zinc-300 dark:text-zinc-600">•</span>
-                <span class="text-xs font-mono font-bold text-zinc-700 dark:text-zinc-300">{{ d.quantity }}x</span>
+                <span class="text-xs font-mono font-bold text-zinc-700 dark:text-zinc-300">{{ d.quantity }} bobine(s)</span>
                 <BadgeFilament
                   :type="d.filamentType"
                   :format="d.format"

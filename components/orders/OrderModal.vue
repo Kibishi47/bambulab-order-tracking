@@ -64,6 +64,12 @@ const selectedDemandsTotal = computed(() => {
   return selected.reduce((sum, d) => sum + (d.quantity * d.estimatedUnitPrice), 0)
 })
 
+const selectedSpoolsCount = computed(() => {
+  return activePendingDemands.value
+    .filter(d => selectedDemandIds.value.includes(d.id))
+    .reduce((sum, d) => sum + d.quantity, 0)
+})
+
 function autoCalculateTotal() {
   const total = selectedDemandsTotal.value + Number(shippingFee.value || 0)
   totalAmount.value = Math.round(total * 100) / 100
@@ -256,7 +262,7 @@ async function submit() {
       <div>
         <div class="flex items-center justify-between mb-1.5">
           <label class="text-xs font-semibold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider">
-            Besoins prêts à commander ({{ selectedDemandIds.length }}/{{ activePendingDemands.length }})
+            Besoins prêts à commander ({{ selectedDemandIds.length }}/{{ activePendingDemands.length }} besoin(s) • {{ selectedSpoolsCount }} bobine(s))
           </label>
           <button
             v-if="activePendingDemands.length > 0"
