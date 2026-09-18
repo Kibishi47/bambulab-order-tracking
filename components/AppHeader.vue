@@ -6,6 +6,7 @@ import {
   Package,
   Scale,
   Users,
+  BookOpen,
   Menu,
   X,
   Sun,
@@ -22,7 +23,8 @@ const navItems = [
   { label: 'Besoins', to: '/besoins', icon: Layers },
   { label: 'Commandes', to: '/commandes', icon: Package },
   { label: 'Règlements & Soldes', to: '/reglements', icon: Scale },
-  { label: 'Membres', to: '/membres', icon: Users }
+  { label: 'Membres', to: '/membres', icon: Users },
+  { label: 'Comment ça marche ?', to: '/guide', icon: BookOpen }
 ]
 
 function isActive(path: string) {
