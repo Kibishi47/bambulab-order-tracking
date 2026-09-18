@@ -129,15 +129,34 @@ $$
 
 ---
 
-## 6. Commandes Usuelles
+## 6. Commandes Usuelles & Makefile
 
+### Commandes Makefile
 ```bash
 # Lancer le serveur de développement
-npm run dev
+make dev
 
-# Exécuter le seed de test manuellement (développement uniquement)
-npm run db:seed
+# Initialiser ou vérifier les tables SQLite locales
+make db:migrate
 
+# Réinitialiser la base locale à zéro (suppression du fichier .db + migration)
+make db:reset
+
+# Vider toutes les tables sans supprimer le fichier .db
+make seed:clean
+
+# Injecter un jeu minimaliste (3 membres, 0 besoin, 0 commande)
+make seed:minimal
+
+# Injecter des membres et des besoins variés en attente de regroupement
+make seed:pending
+
+# Injecter le jeu d'essai exhaustif (commandes équitable/prorata, soldes, virements Wero)
+make seed:full
+```
+
+### Autres commandes npm & Docker
+```bash
 # Vérifier la compilation et le typage
 npm run build
 
