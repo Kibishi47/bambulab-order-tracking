@@ -232,10 +232,10 @@ function openSettleForMember(memberId: number, amount: number) {
               <button
                 v-if="b.memberId !== order.buyerId"
                 type="button"
-                class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded bg-bambu-500 text-white hover:bg-bambu-600 transition-all shadow-sm"
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[36px] text-xs font-semibold rounded-lg bg-bambu-500 text-white hover:bg-bambu-600 active:scale-95 transition-all shadow-sm shrink-0"
                 @click="openSettleForMember(b.memberId, b.totalCost)"
               >
-                <CreditCard class="w-3 h-3" />
+                <CreditCard class="w-3.5 h-3.5" />
                 <span>Rembourser</span>
               </button>
             </div>

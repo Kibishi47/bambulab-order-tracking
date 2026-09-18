@@ -149,15 +149,15 @@ async function deleteSettlement(id: number) {
 
             <div class="pt-2.5 border-t border-zinc-200 dark:border-zinc-800/80 flex items-center justify-between">
               <span class="text-[11px] text-zinc-500 dark:text-zinc-400">
-                Lydia / PayPal / Virement
+                Wero / Virement / PayPal
               </span>
               <button
                 type="button"
-                class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded bg-bambu-500 text-white hover:bg-bambu-600 transition-all shadow-sm"
+                class="inline-flex items-center gap-1.5 px-3.5 py-1.5 min-h-[36px] text-xs font-semibold rounded-lg bg-bambu-500 text-white hover:bg-bambu-600 active:scale-95 transition-all shadow-sm"
                 @click="openQuickSettle(debt.fromMemberId, debt.toMemberId, debt.amount)"
               >
                 <span>Solder</span>
-                <ArrowRight class="w-3 h-3" />
+                <ArrowRight class="w-3.5 h-3.5" />
               </button>
             </div>
           </div>

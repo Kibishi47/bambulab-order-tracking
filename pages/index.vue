@@ -192,22 +192,22 @@ function getNextStatus(status: string) {
           <div
             v-for="(debt, idx) in balancesData.simplifiedDebts"
             :key="idx"
-            class="p-3 rounded-lg bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800/80 flex items-center justify-between gap-3"
+            class="p-3.5 rounded-lg bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800/80 flex items-center justify-between gap-3"
           >
-            <div class="space-y-0.5 text-xs">
-              <div class="flex items-center gap-1.5 font-medium">
-                <strong class="text-zinc-900 dark:text-white">{{ debt.fromMemberName }}</strong>
-                <ArrowRight class="w-3 h-3 text-zinc-400" />
-                <strong class="text-zinc-900 dark:text-white">{{ debt.toMemberName }}</strong>
+            <div class="space-y-1 text-xs min-w-0">
+              <div class="flex items-center gap-1.5 font-medium flex-wrap">
+                <strong class="text-zinc-900 dark:text-white truncate max-w-[120px]">{{ debt.fromMemberName }}</strong>
+                <ArrowRight class="w-3 h-3 text-zinc-400 shrink-0" />
+                <strong class="text-zinc-900 dark:text-white truncate max-w-[120px]">{{ debt.toMemberName }}</strong>
               </div>
-              <p class="font-mono font-bold text-bambu-600 dark:text-bambu-400">
+              <p class="font-mono font-bold text-bambu-600 dark:text-bambu-400 text-sm">
                 {{ debt.amount.toFixed(2) }} €
               </p>
             </div>
 
             <button
               type="button"
-              class="px-2.5 py-1 text-xs font-semibold rounded bg-bambu-500 text-white hover:bg-bambu-600 transition-all shadow-sm"
+              class="px-3.5 py-1.5 min-h-[36px] text-xs font-semibold rounded-lg bg-bambu-500 text-white hover:bg-bambu-600 active:scale-95 transition-all shadow-sm shrink-0"
               @click="openQuickSettle(debt.fromMemberId, debt.toMemberId, debt.amount)"
             >
               Solder
@@ -251,7 +251,7 @@ function getNextStatus(status: string) {
         <div
           v-for="d in pendingDemands"
           :key="d.id"
-          class="p-3.5 sm:p-4 grid grid-cols-1 sm:grid-cols-[1fr_130px_90px_180px] items-center gap-3"
+          class="p-3.5 sm:p-4 flex flex-col gap-2.5 sm:grid sm:grid-cols-[1fr_130px_90px_180px] sm:items-center sm:gap-3 overflow-hidden"
         >
           <!-- Item info -->
           <div class="min-w-0 space-y-1">
@@ -272,20 +272,23 @@ function getNextStatus(status: string) {
             </div>
           </div>
 
-          <!-- Status badge (Col 2: 130px) -->
-          <div class="w-full sm:w-[130px] flex items-center justify-start sm:justify-center">
-            <StatusBadge :status="d.status" size="sm" class="w-full justify-center" />
-          </div>
+          <!-- Ligne statut & montant sur mobile (devient 2 colonnes distinctes sur sm) -->
+          <div class="flex items-center justify-between w-full pt-1.5 border-t border-zinc-100 dark:border-zinc-800/60 sm:border-0 sm:pt-0 sm:contents">
+            <!-- Status badge (Col 2: 130px) -->
+            <div class="flex items-center sm:w-[130px] sm:justify-center">
+              <StatusBadge :status="d.status" size="sm" class="w-full justify-center" />
+            </div>
 
-          <!-- Price (Col 3: 90px) -->
-          <div class="w-full sm:w-[90px] text-left sm:text-right">
-            <span class="text-xs font-mono font-bold text-zinc-900 dark:text-zinc-100">
-              {{ (d.quantity * (d.actualUnitPrice ?? d.estimatedUnitPrice)).toFixed(2) }} €
-            </span>
+            <!-- Price (Col 3: 90px) -->
+            <div class="text-right sm:w-[90px]">
+              <span class="text-xs font-mono font-bold text-zinc-900 dark:text-zinc-100">
+                {{ (d.quantity * (d.actualUnitPrice ?? d.estimatedUnitPrice)).toFixed(2) }} €
+              </span>
+            </div>
           </div>
 
           <!-- Actions (Col 4: 180px) -->
-          <div class="w-full sm:w-[180px] flex items-center justify-start sm:justify-end gap-2">
+          <div class="flex items-center justify-end gap-2 pt-1.5 border-t border-zinc-100 dark:border-zinc-800/60 sm:border-0 sm:pt-0 sm:w-[180px]">
             <!-- Edit Button (Pencil) -->
             <button
               type="button"
@@ -301,7 +304,7 @@ function getNextStatus(status: string) {
               <button
                 v-if="getNextStatus(d.status)"
                 type="button"
-                class="w-full inline-flex items-center justify-center gap-1 px-2 py-1 text-[11px] font-medium rounded-lg bg-zinc-100 hover:bg-zinc-200 text-zinc-800 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 transition-colors truncate"
+                class="w-full inline-flex items-center justify-center gap-1 px-2 py-1 text-[11px] font-medium rounded-lg bg-zinc-100 hover:bg-zinc-200 text-zinc-800 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 transition-colors truncate active:scale-95"
                 :title="getNextStatus(d.status)!.label"
                 @click="quickAdvanceStatus(d)"
               >
