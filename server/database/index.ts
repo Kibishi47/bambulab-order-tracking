@@ -5,13 +5,21 @@ import { drizzle } from 'drizzle-orm/better-sqlite3'
 import * as schema from './schema'
 import { members, groupOrders, filamentDemands, settlements } from './schema'
 
-let _db: ReturnType<typeof drizzle<typeof schema>> | null = null
-let _sqlite: Database.Database | null = null
+// Singleton pattern on global scope to ensure a single instance across HMR and API requests
+const globalForDb = globalThis as unknown as {
+  _sqlite?: Database.Database
+  _drizzle?: ReturnType<typeof drizzle<typeof schema>> & {
+    db: ReturnType<typeof drizzle<typeof schema>>
+    sqlite: Database.Database
+  }
+}
 
 export function getDatabase() {
-  if (_db) return { db: _db, sqlite: _sqlite! }
+  if (globalForDb._sqlite && globalForDb._drizzle) {
+    return globalForDb._drizzle
+  }
 
-  const rawPath = process.env.DATABASE_PATH || './data/bambulab.db'
+  const rawPath = process.env.DATABASE_PATH || (process.env.NODE_ENV === 'production' ? '/app/data/bambulab.db' : './data/bambulab.db')
   const dbPath = path.isAbsolute(rawPath) ? path.resolve(rawPath) : path.resolve(process.cwd(), rawPath)
   const dbDir = path.dirname(dbPath)
 
@@ -19,17 +27,21 @@ export function getDatabase() {
     fs.mkdirSync(dbDir, { recursive: true })
   }
 
-  console.log(`📦 Base SQLite connectée : ${dbPath}`)
   const sqlite = new Database(dbPath)
   sqlite.pragma('journal_mode = WAL')
   sqlite.pragma('foreign_keys = ON')
 
-  _sqlite = sqlite
-  _db = drizzle(sqlite, { schema })
+  console.log('✅ Base SQLite connectée avec succès sur :', dbPath)
 
   initSchema(sqlite)
 
-  return { db: _db, sqlite: _sqlite }
+  const db = drizzle(sqlite, { schema })
+  const instance = Object.assign(db, { db, sqlite })
+
+  globalForDb._sqlite = sqlite
+  globalForDb._drizzle = instance
+
+  return instance
 }
 
 function initSchema(sqlite: Database.Database) {

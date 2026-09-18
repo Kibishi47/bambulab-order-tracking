@@ -30,13 +30,14 @@ WORKDIR /app
 RUN apk add --no-cache curl libstdc++
 
 # Create persistent database folder and set permissions
-RUN mkdir -p /app/data && chown -R node:node /app/data && chmod 777 /app/data && chown -R node:node /app
+RUN mkdir -p /app/data && chmod 777 /app/data
 
 # Copy production output from builder
-COPY --from=builder --chown=node:node /app/.output /app/.output
+COPY --from=builder /app/.output /app/.output
 
-# Use non-root node user for security
-USER node
+# Copy and set entrypoint script for dynamic permission fixes
+COPY entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
 
 # Production environment variables
 ENV NODE_ENV=production
@@ -51,5 +52,5 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
   CMD curl -f http://localhost:3000/api/health || exit 1
 
-# Start the standalone Nitro server
-CMD ["node", ".output/server/index.mjs"]
+# Start container via entrypoint
+ENTRYPOINT ["/app/entrypoint.sh"]
