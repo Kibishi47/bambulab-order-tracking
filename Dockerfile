@@ -10,7 +10,7 @@ RUN apk add --no-cache python3 make g++
 
 # Install dependencies leveraging layer caching
 COPY package*.json ./
-RUN npm ci
+RUN npm i -g npm@latest && npm ci
 
 # Copy project files
 COPY . .
@@ -26,8 +26,8 @@ FROM node:22-alpine AS runner
 
 WORKDIR /app
 
-# Add curl for Coolify and Docker healthchecks
-RUN apk add --no-cache curl
+# Add curl for Coolify/Docker healthchecks and libstdc++ for better-sqlite3 native bindings
+RUN apk add --no-cache curl libstdc++
 
 # Create persistent database folder and set permissions
 RUN mkdir -p /app/data && chown -R node:node /app
