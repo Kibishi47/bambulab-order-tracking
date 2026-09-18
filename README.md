@@ -78,6 +78,30 @@ npm run preview
 
 ---
 
+## 🛡️ Qualité de Code & Intégration Continue (CI)
+
+Le projet dispose d'une suite de vérification statique stricte et d'un pipeline d'intégration continue **GitHub Actions** (`.github/workflows/ci.yml`) déclenché à chaque push ou pull request sur `main` :
+
+- **TypeScript strict** : vérification complète des types via `vue-tsc --noEmit`.
+- **Audit statique (Knip)** : détection du code mort, des fichiers et des dépendances inutilisés.
+- **Contrôle anti-duplication (jscpd)** : détection des copier-coller suspects (`threshold: 5%`).
+- **Build de validation** : compilation complète Nuxt & Nitro pour garantir l'absence de régression.
+
+### Commandes Locales
+```bash
+# Lancer l'intégralité des vérifications locales
+make check
+# ou
+npm run check
+
+# Commandes unitaires
+make typecheck    # npm run typecheck
+make audit        # npm run audit
+make duplicates   # npm run duplicates
+```
+
+---
+
 ## 🔒 Sécurisation de la Base de Données (Zero Seeding en Production)
 
 - **Au démarrage de l'application / conteneur** : seules les migrations de structure de tables sont appliquées automatiquement (`CREATE TABLE IF NOT EXISTS`).

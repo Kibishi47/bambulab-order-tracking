@@ -163,11 +163,32 @@ make seed:pending
 
 # Injecter le jeu d'essai exhaustif (commandes équitable/prorata, soldes, virements Wero)
 make seed:full
+
+# Contrôle qualité complet avant commit/push (typecheck + audit + duplicates)
+make check
+
+# Tâches unitaires d'audit et typage
+make typecheck    # Validation TypeScript stricte via vue-tsc
+make audit        # Détection du code mort et dépendances orphelines via Knip
+make duplicates   # Analyse du code dupliqué via jscpd
 ```
+
+### 6.1 Intégration Continue (GitHub Actions)
+Le workflow `.github/workflows/ci.yml` s'exécute automatiquement sur tout `push` et toute `pull_request` ciblant la branche `main` :
+- **Environnement** : Ubuntu Latest + Node.js 20 LTS avec cache npm.
+- **Étapes exécutées** :
+  1. `npm ci`
+  2. `npx nuxi prepare` (génération des stubs de types `.nuxt/`)
+  3. `npm run typecheck` (`vue-tsc --noEmit`)
+  4. `npm run audit` (`knip`)
+  5. `npm run duplicates` (`jscpd`)
+  6. `npm run build` (`nuxt build`)
+
+Tout échec sur le typage TypeScript, une dépendance rompue ou une erreur de compilation bloque le merge et le déploiement Coolify.
 
 ### Autres commandes npm & Docker
 ```bash
-# Vérifier la compilation et le typage
+# Vérifier la compilation de production en local
 npm run build
 
 # Tester l'image Docker en local
