@@ -94,79 +94,79 @@ async function submit() {
     @update:model-value="emit('update:modelValue', $event)"
   >
     <form @submit.prevent="submit" class="space-y-4">
-      <div v-if="errorMessage" class="p-3 text-xs rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-400">
+      <div v-if="errorMessage" class="p-3 text-xs rounded-lg bg-rose-50 border border-rose-200 text-rose-700 dark:bg-rose-500/10 dark:border-rose-500/30 dark:text-rose-400">
         {{ errorMessage }}
       </div>
 
       <!-- Nom -->
       <div>
-        <label class="block text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-1.5">
+        <label class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider mb-1.5">
           Prénom / Nom *
         </label>
         <div class="relative">
-          <User class="w-4 h-4 text-zinc-500 absolute left-3 top-3" />
+          <User class="w-4 h-4 text-zinc-400 absolute left-3 top-2.5" />
           <input
             v-model="name"
             type="text"
             required
             placeholder="Ex: Thomas, Sophie Martin..."
-            class="w-full bg-zinc-900 border border-zinc-800 rounded-lg pl-9 pr-3.5 py-2.5 text-sm text-zinc-100 focus:outline-none focus:border-bambu-500"
+            class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg pl-9 pr-3 py-2 text-xs text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-bambu-500"
           />
         </div>
       </div>
 
       <!-- Email -->
       <div>
-        <label class="block text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-1.5">
+        <label class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider mb-1.5">
           Adresse Email
         </label>
         <div class="relative">
-          <Mail class="w-4 h-4 text-zinc-500 absolute left-3 top-3" />
+          <Mail class="w-4 h-4 text-zinc-400 absolute left-3 top-2.5" />
           <input
             v-model="email"
             type="email"
             placeholder="thomas@example.com"
-            class="w-full bg-zinc-900 border border-zinc-800 rounded-lg pl-9 pr-3.5 py-2.5 text-sm text-zinc-100 focus:outline-none focus:border-bambu-500"
+            class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg pl-9 pr-3 py-2 text-xs text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-bambu-500"
           />
         </div>
       </div>
 
       <!-- Téléphone -->
       <div>
-        <label class="block text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-1.5">
+        <label class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider mb-1.5">
           Téléphone
         </label>
         <div class="relative">
-          <Phone class="w-4 h-4 text-zinc-500 absolute left-3 top-3" />
+          <Phone class="w-4 h-4 text-zinc-400 absolute left-3 top-2.5" />
           <input
             v-model="phone"
             type="tel"
             placeholder="06 12 34 56 78"
-            class="w-full bg-zinc-900 border border-zinc-800 rounded-lg pl-9 pr-3.5 py-2.5 text-sm text-zinc-100 focus:outline-none focus:border-bambu-500"
+            class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg pl-9 pr-3 py-2 text-xs text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-bambu-500"
           />
         </div>
       </div>
 
       <!-- Lieu de remise -->
       <div>
-        <label class="block text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-1.5">
+        <label class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider mb-1.5">
           Lieu de remise / Adresse
         </label>
         <div class="relative">
-          <MapPin class="w-4 h-4 text-zinc-500 absolute left-3 top-3" />
+          <MapPin class="w-4 h-4 text-zinc-400 absolute left-3 top-2.5" />
           <input
             v-model="dropoffLocation"
             type="text"
             placeholder="Ex: Bureau Thomas, Makerspace, Chez Lucas..."
-            class="w-full bg-zinc-900 border border-zinc-800 rounded-lg pl-9 pr-3.5 py-2.5 text-sm text-zinc-100 focus:outline-none focus:border-bambu-500"
+            class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg pl-9 pr-3 py-2 text-xs text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-bambu-500"
           />
         </div>
       </div>
 
-      <div class="flex items-center justify-end gap-3 pt-3 border-t border-zinc-800">
+      <div class="flex items-center justify-end gap-3 pt-3 border-t border-zinc-200 dark:border-zinc-800">
         <button
           type="button"
-          class="px-4 py-2 text-xs font-medium text-zinc-400 hover:text-white transition-colors"
+          class="px-4 py-2 text-xs font-medium text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white transition-colors"
           @click="emit('update:modelValue', false)"
         >
           Annuler
@@ -174,7 +174,7 @@ async function submit() {
         <button
           type="submit"
           :disabled="loading"
-          class="inline-flex items-center gap-2 px-5 py-2.5 text-xs font-semibold rounded-lg bg-bambu-500 text-white hover:bg-bambu-600 transition-all shadow-md shadow-bambu-500/20 disabled:opacity-50"
+          class="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-lg bg-bambu-500 text-white hover:bg-bambu-600 transition-all shadow-sm disabled:opacity-50"
         >
           <Check class="w-4 h-4" />
           <span>{{ loading ? 'Enregistrement...' : (memberToEdit ? 'Mettre à jour' : 'Ajouter le membre') }}</span>

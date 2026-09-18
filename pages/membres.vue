@@ -7,7 +7,6 @@ import {
   Mail,
   Phone,
   MapPin,
-  Calendar,
   Edit2,
   Trash2,
   Layers,
@@ -60,7 +59,7 @@ function openEditModal(m: any) {
 }
 
 async function deleteMember(id: number, name: string) {
-  if (!confirm(`Supprimer définitivement le membre "${name}" ? Ses besoins et commandes associées seront affectés.`)) {
+  if (!confirm(`Supprimer définitivement le membre "${name}" ? Ses besoins et commandes associés seront affectés.`)) {
     return
   }
 
@@ -82,20 +81,20 @@ function getMemberBalance(memberId: number) {
 <template>
   <div class="space-y-6">
     <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-zinc-200 dark:border-zinc-800">
       <div>
-        <h1 class="text-2xl font-extrabold text-white tracking-tight flex items-center gap-2.5">
+        <h1 class="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-white tracking-tight flex items-center gap-2.5">
           <Users class="w-6 h-6 text-bambu-500" />
           <span>Annuaire des membres</span>
         </h1>
-        <p class="text-xs text-zinc-400 mt-1">
-          Gérez le groupe d'amis participant aux commandes groupées de filaments 3D.
+        <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+          Membres du groupe participant aux commandes de filaments.
         </p>
       </div>
 
       <button
         type="button"
-        class="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-lg bg-bambu-500 text-white hover:bg-bambu-600 shadow-md shadow-bambu-500/20 active:scale-95 transition-all"
+        class="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-lg bg-bambu-500 text-white hover:bg-bambu-600 shadow-sm active:scale-95 transition-all"
         @click="openCreateModal"
       >
         <Plus class="w-4 h-4" />
@@ -104,16 +103,16 @@ function getMemberBalance(memberId: number) {
     </div>
 
     <!-- Members Grid -->
-    <div v-if="loading" class="p-12 text-center text-xs text-zinc-500">
-      Chargement de l'annuaire des membres...
+    <div v-if="loading" class="p-10 text-center text-xs text-zinc-400">
+      Chargement des membres...
     </div>
 
-    <div v-else-if="members.length === 0" class="rounded-xl bg-[#14161a] border border-zinc-800/80 p-12 text-center space-y-3">
-      <Users class="w-8 h-8 text-zinc-600 mx-auto" />
-      <p class="text-sm font-semibold text-zinc-300">Aucun membre enregistré</p>
+    <div v-else-if="members.length === 0" class="rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-10 text-center space-y-3 shadow-sm">
+      <Users class="w-8 h-8 text-zinc-400 mx-auto" />
+      <p class="text-sm font-semibold text-zinc-700 dark:text-zinc-300">Aucun membre enregistré</p>
       <button
         type="button"
-        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-bambu-500 text-white text-xs font-semibold"
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-bambu-500 text-white text-xs font-semibold shadow-sm"
         @click="openCreateModal"
       >
         <Plus class="w-3.5 h-3.5" />
@@ -121,36 +120,36 @@ function getMemberBalance(memberId: number) {
       </button>
     </div>
 
-    <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
       <div
         v-for="m in members"
         :key="m.id"
-        class="rounded-xl bg-[#14161a] border border-zinc-800/80 p-5 shadow-lg shadow-black/20 hover:border-zinc-700/80 transition-all flex flex-col justify-between gap-5"
+        class="rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 shadow-sm flex flex-col justify-between gap-4"
       >
-        <div class="space-y-4">
+        <div class="space-y-3">
           <!-- Top info & Avatar -->
           <div class="flex items-start justify-between">
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center font-bold text-sm text-bambu-400">
+            <div class="flex items-center gap-2.5">
+              <div class="w-9 h-9 rounded-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center font-bold text-xs text-bambu-600 dark:text-bambu-400">
                 {{ m.name.charAt(0).toUpperCase() }}
               </div>
               <div>
-                <h3 class="text-base font-bold text-white tracking-tight">
+                <h3 class="text-sm font-bold text-zinc-900 dark:text-white tracking-tight">
                   {{ m.name }}
                 </h3>
-                <span class="text-[11px] text-zinc-500">
-                  Membre depuis le {{ m.createdAt ? m.createdAt.slice(0, 10) : 'N/A' }}
+                <span class="text-[10px] text-zinc-400">
+                  Depuis le {{ m.createdAt ? m.createdAt.slice(0, 10) : 'N/A' }}
                 </span>
               </div>
             </div>
 
             <!-- Net Balance Badge -->
             <span
-              class="px-2.5 py-1 rounded-full text-xs font-mono font-bold border"
+              class="px-2 py-0.5 rounded-full text-[11px] font-mono font-bold border"
               :class="[
                 getMemberBalance(m.id) > 0.01
-                  ? 'bg-bambu-500/15 text-bambu-400 border-bambu-500/30'
-                  : (getMemberBalance(m.id) < -0.01 ? 'bg-rose-500/15 text-rose-400 border-rose-500/30' : 'bg-zinc-800 text-zinc-400 border-zinc-700')
+                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-400 dark:border-emerald-500/30'
+                  : (getMemberBalance(m.id) < -0.01 ? 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/15 dark:text-rose-400 dark:border-rose-500/30' : 'bg-zinc-100 text-zinc-600 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:border-zinc-700')
               ]"
             >
               {{ getMemberBalance(m.id) > 0 ? `+${getMemberBalance(m.id).toFixed(2)}` : getMemberBalance(m.id).toFixed(2) }} €
@@ -158,38 +157,38 @@ function getMemberBalance(memberId: number) {
           </div>
 
           <!-- Contact details -->
-          <div class="space-y-2 text-xs text-zinc-300">
+          <div class="space-y-1.5 text-xs text-zinc-600 dark:text-zinc-300">
             <div v-if="m.email" class="flex items-center gap-2">
-              <Mail class="w-3.5 h-3.5 text-zinc-500" />
-              <a :href="`mailto:${m.email}`" class="hover:text-bambu-400 transition-colors truncate">
+              <Mail class="w-3.5 h-3.5 text-zinc-400 flex-shrink-0" />
+              <a :href="`mailto:${m.email}`" class="hover:text-bambu-600 dark:hover:text-bambu-400 transition-colors truncate">
                 {{ m.email }}
               </a>
             </div>
 
             <div v-if="m.phone" class="flex items-center gap-2">
-              <Phone class="w-3.5 h-3.5 text-zinc-500" />
-              <a :href="`tel:${m.phone}`" class="hover:text-bambu-400 transition-colors">
+              <Phone class="w-3.5 h-3.5 text-zinc-400 flex-shrink-0" />
+              <a :href="`tel:${m.phone}`" class="hover:text-bambu-600 dark:hover:text-bambu-400 transition-colors">
                 {{ m.phone }}
               </a>
             </div>
 
-            <div v-if="m.dropoffLocation" class="flex items-center gap-2 text-zinc-400">
-              <MapPin class="w-3.5 h-3.5 text-zinc-500 flex-shrink-0" />
+            <div v-if="m.dropoffLocation" class="flex items-center gap-2 text-zinc-500 dark:text-zinc-400 text-[11px]">
+              <MapPin class="w-3.5 h-3.5 text-zinc-400 flex-shrink-0" />
               <span class="truncate">{{ m.dropoffLocation }}</span>
             </div>
           </div>
         </div>
 
         <!-- Stats & Actions Footer -->
-        <div class="pt-3 border-t border-zinc-800/80 flex items-center justify-between text-xs">
-          <div class="flex items-center gap-3 text-zinc-400">
+        <div class="pt-2.5 border-t border-zinc-100 dark:border-zinc-800/80 flex items-center justify-between text-xs">
+          <div class="flex items-center gap-2 text-zinc-500 dark:text-zinc-400 text-[11px]">
             <span class="flex items-center gap-1">
-              <Layers class="w-3 h-3 text-zinc-500" />
+              <Layers class="w-3 h-3 text-zinc-400" />
               <strong>{{ m.demandsCount || 0 }}</strong> besoin(s)
             </span>
             <span>•</span>
             <span class="flex items-center gap-1">
-              <ShoppingBag class="w-3 h-3 text-zinc-500" />
+              <ShoppingBag class="w-3 h-3 text-zinc-400" />
               <strong>{{ m.ordersBoughtCount || 0 }}</strong> achat(s)
             </span>
           </div>
@@ -197,7 +196,7 @@ function getMemberBalance(memberId: number) {
           <div class="flex items-center gap-1">
             <button
               type="button"
-              class="p-1.5 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-colors"
+              class="p-1 text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors"
               title="Modifier ce membre"
               @click="openEditModal(m)"
             >
@@ -205,7 +204,7 @@ function getMemberBalance(memberId: number) {
             </button>
             <button
               type="button"
-              class="p-1.5 text-zinc-400 hover:text-rose-400 hover:bg-zinc-800 rounded-lg transition-colors"
+              class="p-1 text-zinc-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors"
               title="Supprimer ce membre"
               @click="deleteMember(m.id, m.name)"
             >

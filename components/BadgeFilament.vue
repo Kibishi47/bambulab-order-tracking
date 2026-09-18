@@ -13,7 +13,7 @@ const typeConfig = computed(() => {
   return BAMBU_FILAMENT_TYPES.find(t => t.name.toLowerCase() === props.type.toLowerCase()) || {
     name: props.type,
     category: 'Autre',
-    badgeClass: 'bg-zinc-800 text-zinc-300 border-zinc-700'
+    badgeClass: 'bg-zinc-100 text-zinc-700 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700'
   }
 })
 
@@ -30,13 +30,13 @@ const isLightColor = computed(() => {
 </script>
 
 <template>
-  <div class="inline-flex items-center gap-2 flex-wrap">
+  <div class="inline-flex items-center gap-1.5 flex-wrap">
     <!-- Filament Type Badge -->
     <span
       class="inline-flex items-center font-medium rounded-md border tracking-wide"
       :class="[
         typeConfig.badgeClass,
-        size === 'sm' ? 'px-2 py-0.5 text-xs' : 'px-2.5 py-1 text-xs'
+        size === 'sm' ? 'px-2 py-0.5 text-[11px]' : 'px-2.5 py-1 text-xs'
       ]"
     >
       {{ typeConfig.name }}
@@ -48,22 +48,22 @@ const isLightColor = computed(() => {
       class="inline-flex items-center rounded-md border font-medium text-[11px]"
       :class="[
         format === 'BOBINE'
-          ? 'bg-amber-950/40 text-amber-300 border-amber-800/40'
-          : 'bg-zinc-800/70 text-zinc-400 border-zinc-700/60',
-        size === 'sm' ? 'px-1.5 py-0.5' : 'px-2 py-0.5'
+          ? 'bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/40'
+          : 'bg-zinc-100 text-zinc-600 border-zinc-200 dark:bg-zinc-800/70 dark:text-zinc-400 dark:border-zinc-700/60',
+        size === 'sm' ? 'px-1.5 py-0.5 text-[10px]' : 'px-2 py-0.5'
       ]"
     >
-      {{ format === 'BOBINE' ? 'Bobine complète' : 'Recharge' }}
+      {{ format === 'BOBINE' ? 'Bobine' : 'Recharge' }}
     </span>
 
     <!-- Color Swatch & Label -->
     <span
       v-if="colorName"
-      class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-zinc-900/90 border border-zinc-800 text-xs text-zinc-200"
+      class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs text-zinc-700 dark:text-zinc-200"
     >
       <span
         class="w-2.5 h-2.5 rounded-full inline-block flex-shrink-0"
-        :class="{ 'ring-1 ring-zinc-500': isLightColor }"
+        :class="{ 'ring-1 ring-zinc-400 dark:ring-zinc-600': isLightColor }"
         :style="{ backgroundColor: colorHex || '#888888' }"
       />
       <span>{{ colorName }}</span>

@@ -8,11 +8,15 @@ import {
   Users,
   PlusCircle,
   Menu,
-  X
+  X,
+  Sun,
+  Moon
 } from 'lucide-vue-next'
+import { useTheme } from '~/composables/useTheme'
 
 const route = useRoute()
 const mobileMenuOpen = ref(false)
+const { isDark, toggleTheme } = useTheme()
 
 const emit = defineEmits<{
   (e: 'open-demand-modal'): void
@@ -33,14 +37,13 @@ function isActive(path: string) {
 </script>
 
 <template>
-  <header class="sticky top-0 z-40 w-full border-b border-zinc-800/80 bg-zinc-950/80 backdrop-blur-md">
+  <header class="sticky top-0 z-40 w-full border-b border-zinc-200 dark:border-zinc-800 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-md transition-colors">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex items-center justify-between h-16">
         <!-- Logo & Brand -->
         <div class="flex items-center gap-6">
           <NuxtLink to="/" class="flex items-center gap-3 group">
-            <div class="w-9 h-9 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center p-1.5 shadow-md shadow-black/40 group-hover:border-bambu-500/50 transition-colors">
-              <!-- Bambu styled spool symbol -->
+            <div class="w-8 h-8 rounded-lg bg-zinc-100 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 flex items-center justify-center p-1.5 transition-colors">
               <svg viewBox="0 0 24 24" fill="none" class="w-full h-full text-bambu-500">
                 <rect x="3" y="3" width="7" height="7" rx="1.5" fill="currentColor" />
                 <rect x="14" y="3" width="7" height="7" rx="1.5" fill="currentColor" fill-opacity="0.6" />
@@ -49,11 +52,10 @@ function isActive(path: string) {
               </svg>
             </div>
             <div>
-              <span class="text-sm font-bold tracking-tight text-white flex items-center gap-1.5">
+              <span class="text-sm font-bold tracking-tight text-zinc-900 dark:text-white flex items-center gap-1.5">
                 Bambu<span class="text-bambu-500">Share</span>
-                <span class="text-[10px] uppercase font-semibold px-1.5 py-0.2 rounded bg-bambu-500/10 text-bambu-400 border border-bambu-500/30">Hub</span>
               </span>
-              <span class="block text-[11px] text-zinc-400 font-medium leading-none">
+              <span class="block text-[11px] text-zinc-500 dark:text-zinc-400 font-medium leading-none">
                 Commandes groupées
               </span>
             </div>
@@ -68,33 +70,47 @@ function isActive(path: string) {
               class="flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg transition-all"
               :class="[
                 isActive(item.to)
-                  ? 'bg-zinc-800/80 text-white border border-zinc-700/80 shadow-sm'
-                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900'
+                  ? 'bg-zinc-100 text-zinc-900 border border-zinc-300/80 font-semibold dark:bg-zinc-800/80 dark:text-white dark:border-zinc-700/80'
+                  : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-zinc-900'
               ]"
             >
-              <component :is="item.icon" class="w-3.5 h-3.5" :class="isActive(item.to) ? 'text-bambu-400' : 'text-zinc-400'" />
+              <component
+                :is="item.icon"
+                class="w-3.5 h-3.5"
+                :class="isActive(item.to) ? 'text-bambu-500' : 'text-zinc-400 dark:text-zinc-500'"
+              />
               <span>{{ item.label }}</span>
             </NuxtLink>
           </nav>
         </div>
 
-        <!-- Right Side: Fast Action Button -->
-        <div class="hidden sm:flex items-center gap-3">
+        <!-- Right Side: Theme toggle + Fast Action Button -->
+        <div class="flex items-center gap-2.5">
+          <!-- Light / Dark Toggle Button -->
           <button
             type="button"
-            class="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-lg bg-bambu-500 text-white hover:bg-bambu-600 active:scale-95 transition-all shadow-md shadow-bambu-500/20"
+            class="p-2 text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-900 rounded-lg transition-colors border border-transparent hover:border-zinc-200 dark:hover:border-zinc-800"
+            :title="isDark ? 'Passer au mode clair' : 'Passer au mode sombre'"
+            @click="toggleTheme"
+          >
+            <Sun v-if="isDark" class="w-4 h-4 text-amber-400" />
+            <Moon v-else class="w-4 h-4 text-zinc-600" />
+          </button>
+
+          <!-- Action Button "+ Nouveau besoin" -->
+          <button
+            type="button"
+            class="hidden sm:inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-lg bg-bambu-500 text-white hover:bg-bambu-600 active:scale-95 transition-all shadow-sm"
             @click="emit('open-demand-modal')"
           >
             <PlusCircle class="w-4 h-4" />
             <span>Nouveau besoin</span>
           </button>
-        </div>
 
-        <!-- Mobile Menu Toggle -->
-        <div class="flex items-center gap-2 md:hidden">
+          <!-- Mobile Menu Toggle -->
           <button
             type="button"
-            class="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg"
+            class="p-2 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg md:hidden"
             @click="mobileMenuOpen = !mobileMenuOpen"
           >
             <Menu v-if="!mobileMenuOpen" class="w-5 h-5" />
@@ -107,7 +123,7 @@ function isActive(path: string) {
     <!-- Mobile Drawer -->
     <div
       v-if="mobileMenuOpen"
-      class="md:hidden border-t border-zinc-800 bg-[#121418] px-4 pt-3 pb-5 space-y-2"
+      class="md:hidden border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#121418] px-4 pt-3 pb-5 space-y-2"
     >
       <NuxtLink
         v-for="item in navItems"
@@ -116,19 +132,19 @@ function isActive(path: string) {
         class="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg"
         :class="[
           isActive(item.to)
-            ? 'bg-zinc-800 text-white border border-zinc-700'
-            : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900'
+            ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white border border-zinc-300 dark:border-zinc-700'
+            : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-900'
         ]"
         @click="mobileMenuOpen = false"
       >
-        <component :is="item.icon" class="w-4 h-4 text-bambu-400" />
+        <component :is="item.icon" class="w-4 h-4 text-bambu-500" />
         <span>{{ item.label }}</span>
       </NuxtLink>
 
-      <div class="pt-3 border-t border-zinc-800">
+      <div class="pt-3 border-t border-zinc-200 dark:border-zinc-800">
         <button
           type="button"
-          class="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-lg bg-bambu-500 text-white hover:bg-bambu-600 transition-all shadow-md shadow-bambu-500/20"
+          class="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-lg bg-bambu-500 text-white hover:bg-bambu-600 transition-all shadow-sm"
           @click="emit('open-demand-modal'); mobileMenuOpen = false"
         >
           <PlusCircle class="w-4 h-4" />

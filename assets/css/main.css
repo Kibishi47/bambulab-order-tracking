@@ -3,24 +3,34 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    color-scheme: light dark;
+  }
+
   body {
-    @apply bg-zinc-950 text-zinc-100 antialiased min-h-screen selection:bg-bambu-500 selection:text-white;
+    @apply bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100 antialiased min-h-screen selection:bg-bambu-500 selection:text-white transition-colors duration-150;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 }
 
-/* Custom subtle scrollbar */
+/* Subtle scrollbar adapting to light / dark mode */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #09090b;
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
+  background: #d4d4d8;
+  border-radius: 9999px;
+}
+.dark ::-webkit-scrollbar-thumb {
   background: #27272a;
-  border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
+  background: #a1a1aa;
+}
+.dark ::-webkit-scrollbar-thumb:hover {
   background: #3f3f46;
 }

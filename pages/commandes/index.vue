@@ -6,10 +6,7 @@ import {
   Package,
   Plus,
   Calendar,
-  User,
-  ExternalLink,
-  ChevronRight,
-  Sparkles
+  ChevronRight
 } from 'lucide-vue-next'
 
 const triggerRefresh = inject<() => void>('triggerRefresh')
@@ -55,20 +52,20 @@ const pendingDemands = computed(() => {
 <template>
   <div class="space-y-6">
     <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-zinc-200 dark:border-zinc-800">
       <div>
-        <h1 class="text-2xl font-extrabold text-white tracking-tight flex items-center gap-2.5">
+        <h1 class="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-white tracking-tight flex items-center gap-2.5">
           <Package class="w-6 h-6 text-bambu-500" />
-          <span>Commandes groupées Bambu Lab</span>
+          <span>Commandes groupées</span>
         </h1>
-        <p class="text-xs text-zinc-400 mt-1">
-          Historique des paniers commandés sur le store officiel, répartition des coûts et statut de livraison.
+        <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+          Historique des paniers d'achats passés sur le store Bambu Lab.
         </p>
       </div>
 
       <button
         type="button"
-        class="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-lg bg-bambu-500 text-white hover:bg-bambu-600 shadow-md shadow-bambu-500/20 active:scale-95 transition-all"
+        class="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-lg bg-bambu-500 text-white hover:bg-bambu-600 shadow-sm active:scale-95 transition-all"
         @click="orderModalOpen = true"
       >
         <Plus class="w-4 h-4" />
@@ -77,19 +74,16 @@ const pendingDemands = computed(() => {
     </div>
 
     <!-- Orders Cards Grid -->
-    <div v-if="loading" class="p-12 text-center text-xs text-zinc-500">
-      Chargement des commandes groupées...
+    <div v-if="loading" class="p-10 text-center text-xs text-zinc-400">
+      Chargement des commandes...
     </div>
 
-    <div v-else-if="orders.length === 0" class="rounded-xl bg-[#14161a] border border-zinc-800/80 p-12 text-center space-y-3">
-      <Package class="w-8 h-8 text-zinc-600 mx-auto" />
-      <p class="text-sm font-semibold text-zinc-300">Aucune commande groupée passée</p>
-      <p class="text-xs text-zinc-500 max-w-sm mx-auto">
-        Regroupez les besoins en attente dans une commande pour désigner l'acheteur et ventiler les coûts.
-      </p>
+    <div v-else-if="orders.length === 0" class="rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-10 text-center space-y-3 shadow-sm">
+      <Package class="w-8 h-8 text-zinc-400 mx-auto" />
+      <p class="text-sm font-semibold text-zinc-700 dark:text-zinc-300">Aucune commande groupée enregistrée</p>
       <button
         type="button"
-        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-bambu-500 text-white text-xs font-semibold"
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-bambu-500 text-white text-xs font-semibold shadow-sm"
         @click="orderModalOpen = true"
       >
         <Plus class="w-3.5 h-3.5" />
@@ -102,43 +96,43 @@ const pendingDemands = computed(() => {
         v-for="o in orders"
         :key="o.id"
         :to="`/commandes/${o.id}`"
-        class="group block rounded-xl bg-[#14161a] border border-zinc-800/80 p-5 shadow-lg shadow-black/20 hover:border-bambu-500/60 transition-all space-y-4"
+        class="group block rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 sm:p-5 shadow-sm hover:border-zinc-400 dark:hover:border-zinc-700 transition-all space-y-3"
       >
         <div class="flex items-start justify-between">
           <div>
             <div class="flex items-center gap-2">
-              <span class="text-sm font-mono font-bold text-white group-hover:text-bambu-400 transition-colors">
+              <span class="text-sm font-mono font-bold text-zinc-900 dark:text-white group-hover:text-bambu-600 dark:group-hover:text-bambu-400 transition-colors">
                 #{{ o.orderNumber }}
               </span>
               <StatusBadge :status="o.status" type="order" size="sm" />
             </div>
-            <div class="flex items-center gap-2 text-xs text-zinc-400 mt-1">
-              <Calendar class="w-3.5 h-3.5 text-zinc-500" />
+            <div class="flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+              <Calendar class="w-3.5 h-3.5 text-zinc-400" />
               <span>Acheté le {{ o.purchaseDate }}</span>
             </div>
           </div>
 
           <div class="text-right">
-            <span class="text-lg font-bold font-mono text-zinc-100">
+            <span class="text-base sm:text-lg font-bold font-mono text-zinc-900 dark:text-zinc-100">
               {{ o.totalAmount.toFixed(2) }} €
             </span>
-            <span class="block text-[11px] text-zinc-500">
+            <span class="block text-[11px] text-zinc-400">
               {{ o.totalSpools }} bobine(s)
             </span>
           </div>
         </div>
 
-        <div class="pt-3 border-t border-zinc-800/60 flex items-center justify-between text-xs">
+        <div class="pt-2.5 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between text-xs">
           <div class="flex items-center gap-2">
-            <span class="w-6 h-6 rounded-full bg-zinc-800 flex items-center justify-center font-bold text-[11px] text-bambu-400">
+            <span class="w-5 h-5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-center font-bold text-[10px]">
               {{ o.buyerName ? o.buyerName.charAt(0).toUpperCase() : '?' }}
             </span>
-            <span class="text-zinc-300 font-medium">
-              Payé par <strong class="text-white">{{ o.buyerName }}</strong>
+            <span class="text-zinc-600 dark:text-zinc-400 text-[11px]">
+              Avancé par <strong class="text-zinc-900 dark:text-zinc-200">{{ o.buyerName }}</strong>
             </span>
           </div>
 
-          <span class="text-bambu-400 font-semibold group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
+          <span class="text-bambu-600 dark:text-bambu-400 font-semibold group-hover:translate-x-0.5 transition-transform inline-flex items-center gap-1 text-[11px]">
             <span>Détail</span>
             <ChevronRight class="w-3.5 h-3.5" />
           </span>

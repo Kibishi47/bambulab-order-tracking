@@ -87,20 +87,20 @@ async function submit() {
     @update:model-value="emit('update:modelValue', $event)"
   >
     <form @submit.prevent="submit" class="space-y-4">
-      <div v-if="errorMessage" class="p-3 text-xs rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-400">
+      <div v-if="errorMessage" class="p-3 text-xs rounded-lg bg-rose-50 border border-rose-200 text-rose-700 dark:bg-rose-500/10 dark:border-rose-500/30 dark:text-rose-400">
         {{ errorMessage }}
       </div>
 
       <!-- Flux Débiteur -> Créancier -->
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
         <div>
-          <label class="block text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-1.5">
+          <label class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider mb-1.5">
             Qui a payé ? (Débiteur) *
           </label>
           <select
             v-model="payerId"
             required
-            class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3.5 py-2.5 text-sm text-zinc-100 focus:outline-none focus:border-bambu-500"
+            class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-bambu-500"
           >
             <option value="" disabled>Sélectionner le payeur</option>
             <option v-for="m in members" :key="m.id" :value="m.id">
@@ -110,13 +110,13 @@ async function submit() {
         </div>
 
         <div>
-          <label class="block text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-1.5">
+          <label class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider mb-1.5">
             Qui a reçu ? (Bénéficiaire) *
           </label>
           <select
             v-model="receiverId"
             required
-            class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3.5 py-2.5 text-sm text-zinc-100 focus:outline-none focus:border-bambu-500"
+            class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-bambu-500"
           >
             <option value="" disabled>Sélectionner le bénéficiaire</option>
             <option v-for="m in members" :key="m.id" :value="m.id">
@@ -129,11 +129,11 @@ async function submit() {
       <!-- Montant & Moyen de paiement -->
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label class="block text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-1.5">
+          <label class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider mb-1.5">
             Montant remboursé (€) *
           </label>
           <div class="relative">
-            <Euro class="w-4 h-4 text-zinc-500 absolute left-3 top-3" />
+            <Euro class="w-4 h-4 text-zinc-400 absolute left-3 top-2.5" />
             <input
               v-model.number="amount"
               type="number"
@@ -141,19 +141,19 @@ async function submit() {
               min="0.01"
               required
               placeholder="33.98"
-              class="w-full bg-zinc-900 border border-zinc-800 rounded-lg pl-9 pr-3.5 py-2.5 text-sm font-bold text-zinc-100 focus:outline-none focus:border-bambu-500"
+              class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg pl-9 pr-3 py-2 text-xs font-bold text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-bambu-500"
             />
           </div>
         </div>
 
         <div>
-          <label class="block text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-1.5">
+          <label class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider mb-1.5">
             Moyen de règlement *
           </label>
           <select
             v-model="paymentMethod"
             required
-            class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3.5 py-2.5 text-sm text-zinc-100 focus:outline-none focus:border-bambu-500"
+            class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-bambu-500"
           >
             <option v-for="pm in PAYMENT_METHODS" :key="pm.value" :value="pm.value">
               {{ pm.label }}
@@ -164,38 +164,38 @@ async function submit() {
 
       <!-- Date de règlement -->
       <div>
-        <label class="block text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-1.5">
-          Date du virement / remise en mains propres *
+        <label class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider mb-1.5">
+          Date du règlement *
         </label>
         <div class="relative">
-          <Calendar class="w-4 h-4 text-zinc-500 absolute left-3 top-3" />
+          <Calendar class="w-4 h-4 text-zinc-400 absolute left-3 top-2.5" />
           <input
             v-model="settledAt"
             type="date"
             required
-            class="w-full bg-zinc-900 border border-zinc-800 rounded-lg pl-9 pr-3.5 py-2.5 text-sm text-zinc-100 focus:outline-none focus:border-bambu-500"
+            class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg pl-9 pr-3 py-2 text-xs text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-bambu-500"
           />
         </div>
       </div>
 
       <!-- Notes -->
       <div>
-        <label class="block text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-1.5">
+        <label class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider mb-1.5">
           Notes / Référence transaction
         </label>
         <input
           v-model="notes"
           type="text"
           placeholder="Ex: Virement Lydia, Ref commande #FR..."
-          class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3.5 py-2 text-xs text-zinc-100 focus:outline-none focus:border-bambu-500"
+          class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-bambu-500"
         />
       </div>
 
       <!-- Actions -->
-      <div class="flex items-center justify-end gap-3 pt-3 border-t border-zinc-800">
+      <div class="flex items-center justify-end gap-3 pt-3 border-t border-zinc-200 dark:border-zinc-800">
         <button
           type="button"
-          class="px-4 py-2 text-xs font-medium text-zinc-400 hover:text-white transition-colors"
+          class="px-4 py-2 text-xs font-medium text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white transition-colors"
           @click="emit('update:modelValue', false)"
         >
           Annuler
@@ -203,7 +203,7 @@ async function submit() {
         <button
           type="submit"
           :disabled="loading"
-          class="inline-flex items-center gap-2 px-5 py-2.5 text-xs font-semibold rounded-lg bg-bambu-500 text-white hover:bg-bambu-600 active:scale-95 transition-all shadow-md shadow-bambu-500/20 disabled:opacity-50"
+          class="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-lg bg-bambu-500 text-white hover:bg-bambu-600 active:scale-95 transition-all shadow-sm disabled:opacity-50"
         >
           <Check class="w-4 h-4" />
           <span>{{ loading ? 'Enregistrement...' : 'Enregistrer le remboursement' }}</span>

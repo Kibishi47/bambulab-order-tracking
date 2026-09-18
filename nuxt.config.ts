@@ -11,6 +11,15 @@ export default defineNuxtConfig({
   css: [
     '~/assets/css/main.css'
   ],
+  app: {
+    head: {
+      title: 'BambuShare - Suivi des commandes groupées de filaments 3D',
+      link: [
+        { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
+        { rel: 'alternate icon', href: '/favicon.ico' }
+      ]
+    }
+  },
   runtimeConfig: {
     databasePath: process.env.DATABASE_PATH || './data/bambulab.db'
   }
