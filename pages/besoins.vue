@@ -11,7 +11,6 @@ import {
 import {
   Layers,
   Plus,
-  Filter,
   Search,
   CheckCircle,
   Truck,
@@ -19,8 +18,7 @@ import {
   ShoppingBag,
   Trash2,
   XCircle,
-  ArrowRight,
-  Sparkles
+  Edit2
 } from 'lucide-vue-next'
 
 const triggerRefresh = inject<() => void>('triggerRefresh')
@@ -38,8 +36,8 @@ const searchQuery = ref<string>('')
 
 // Modals
 const demandModalOpen = ref(false)
+const demandToEdit = ref<any | null>(null)
 const orderModalOpen = ref(false)
-const demandToDelete = ref<number | null>(null)
 
 async function loadDemands() {
   loading.value = true
@@ -97,7 +95,16 @@ const totalFilteredCost = computed(() => {
   }, 0)
 })
 
-// Lifecycle status updates
+function openCreateModal() {
+  demandToEdit.value = null
+  demandModalOpen.value = true
+}
+
+function openEditModal(d: any) {
+  demandToEdit.value = d
+  demandModalOpen.value = true
+}
+
 async function updateStatus(id: number, nextStatus: string) {
   try {
     await $fetch(`/api/demands/${id}`, {
@@ -112,7 +119,7 @@ async function updateStatus(id: number, nextStatus: string) {
 }
 
 async function deleteDemand(id: number) {
-  if (!confirm('Voulez-vous vraiment supprimer cette demande ?')) return
+  if (!confirm('Voulez-vous vraiment supprimer ce besoin de filament ?')) return
   try {
     await $fetch(`/api/demands/${id}`, { method: 'DELETE' })
     loadDemands()
@@ -129,9 +136,9 @@ function getNextStatus(status: string) {
     case 'PRIS_EN_CHARGE':
       return { next: 'COMMANDE', label: 'Marquer commandé', icon: ShoppingBag }
     case 'COMMANDE':
-      return { next: 'RECU', label: 'Reçu au point relais', icon: Truck }
+      return { next: 'RECU', label: 'Reçu', icon: Truck }
     case 'RECU':
-      return { next: 'DISTRIBUE', label: 'Marquer distribué', icon: PackageCheck }
+      return { next: 'DISTRIBUE', label: 'Distribué', icon: PackageCheck }
     default:
       return null
   }
@@ -141,32 +148,32 @@ function getNextStatus(status: string) {
 <template>
   <div class="space-y-6">
     <!-- Top Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-zinc-200 dark:border-zinc-800">
       <div>
-        <h1 class="text-2xl font-extrabold text-white tracking-tight flex items-center gap-2.5">
+        <h1 class="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-white tracking-tight flex items-center gap-2.5">
           <Layers class="w-6 h-6 text-bambu-500" />
           <span>Besoins en filaments</span>
         </h1>
-        <p class="text-xs text-zinc-400 mt-1">
-          Suivi au fil de l'eau des bobines souhaitées par chaque membre avec cycle de vie complet.
+        <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+          Suivi au fil de l'eau des bobines souhaitées avec cycle de vie et édition complète.
         </p>
       </div>
 
-      <div class="flex items-center gap-3">
+      <div class="flex items-center gap-2.5">
         <button
           v-if="pendingForOrder.length > 0"
           type="button"
-          class="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-lg bg-zinc-800 text-zinc-200 hover:text-white border border-zinc-700 transition-all"
+          class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 border border-zinc-300 dark:border-zinc-700 transition-colors"
           @click="orderModalOpen = true"
         >
-          <ShoppingBag class="w-4 h-4 text-bambu-400" />
+          <ShoppingBag class="w-4 h-4 text-bambu-600 dark:text-bambu-400" />
           <span>Créer commande ({{ totalPendingSpools }} bobines)</span>
         </button>
 
         <button
           type="button"
-          class="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-lg bg-bambu-500 text-white hover:bg-bambu-600 shadow-md shadow-bambu-500/20 active:scale-95 transition-all"
-          @click="demandModalOpen = true"
+          class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-lg bg-bambu-500 text-white hover:bg-bambu-600 shadow-sm active:scale-95 transition-all"
+          @click="openCreateModal"
         >
           <Plus class="w-4 h-4" />
           <span>Ajouter un besoin</span>
@@ -175,16 +182,16 @@ function getNextStatus(status: string) {
     </div>
 
     <!-- Filters Bar -->
-    <div class="rounded-xl bg-[#14161a] border border-zinc-800/80 p-4 shadow-lg shadow-black/20 space-y-3">
+    <div class="rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 shadow-sm space-y-3">
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <!-- Search query -->
         <div class="relative">
-          <Search class="w-4 h-4 text-zinc-500 absolute left-3 top-2.5" />
+          <Search class="w-4 h-4 text-zinc-400 absolute left-3 top-2.5" />
           <input
             v-model="searchQuery"
             type="text"
             placeholder="Rechercher (couleur, membre, projet...)"
-            class="w-full bg-zinc-900 border border-zinc-800 rounded-lg pl-9 pr-3 py-2 text-xs text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-bambu-500"
+            class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg pl-9 pr-3 py-2 text-xs text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:border-bambu-500"
           />
         </div>
 
@@ -192,7 +199,7 @@ function getNextStatus(status: string) {
         <div>
           <select
             v-model="filterStatus"
-            class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-200 focus:outline-none focus:border-bambu-500"
+            class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-bambu-500"
           >
             <option value="">Tous les statuts</option>
             <option v-for="s in DEMAND_STATUSES" :key="s.value" :value="s.value">
@@ -205,7 +212,7 @@ function getNextStatus(status: string) {
         <div>
           <select
             v-model="filterMember"
-            class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-200 focus:outline-none focus:border-bambu-500"
+            class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-bambu-500"
           >
             <option value="">Tous les membres</option>
             <option v-for="m in members" :key="m.id" :value="m.id">
@@ -218,7 +225,7 @@ function getNextStatus(status: string) {
         <div>
           <select
             v-model="filterType"
-            class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-200 focus:outline-none focus:border-bambu-500"
+            class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-bambu-500"
           >
             <option value="">Toutes les matières</option>
             <option v-for="t in BAMBU_FILAMENT_TYPES" :key="t.name" :value="t.name">
@@ -229,14 +236,14 @@ function getNextStatus(status: string) {
       </div>
 
       <!-- Quick summary of filtered results -->
-      <div class="flex items-center justify-between text-[11px] text-zinc-400 pt-2 border-t border-zinc-800/60">
+      <div class="flex items-center justify-between text-[11px] text-zinc-500 dark:text-zinc-400 pt-2 border-t border-zinc-200 dark:border-zinc-800">
         <span>
-          <strong>{{ filteredDemands.length }}</strong> besoin(s) affiché(s) • Total : <strong>{{ totalFilteredCost.toFixed(2) }} €</strong>
+          <strong>{{ filteredDemands.length }}</strong> besoin(s) affiché(s) • Total estimé : <strong>{{ totalFilteredCost.toFixed(2) }} €</strong>
         </span>
         <button
           v-if="filterStatus || filterMember || filterType || searchQuery"
           type="button"
-          class="text-bambu-400 hover:underline"
+          class="text-bambu-600 dark:text-bambu-400 hover:underline"
           @click="filterStatus = ''; filterMember = ''; filterType = ''; searchQuery = ''"
         >
           Réinitialiser les filtres
@@ -244,37 +251,37 @@ function getNextStatus(status: string) {
       </div>
     </div>
 
-    <!-- Demands List Table / Cards -->
-    <div class="rounded-xl bg-[#14161a] border border-zinc-800/80 overflow-hidden shadow-lg shadow-black/20">
-      <div v-if="loading" class="p-12 text-center text-xs text-zinc-500">
+    <!-- Demands List -->
+    <div class="rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 overflow-hidden shadow-sm">
+      <div v-if="loading" class="p-10 text-center text-xs text-zinc-400">
         Chargement des besoins...
       </div>
 
-      <div v-else-if="filteredDemands.length === 0" class="p-12 text-center space-y-3">
-        <Layers class="w-8 h-8 text-zinc-600 mx-auto" />
-        <p class="text-sm font-semibold text-zinc-300">Aucun besoin ne correspond aux critères</p>
+      <div v-else-if="filteredDemands.length === 0" class="p-10 text-center space-y-3">
+        <Layers class="w-8 h-8 text-zinc-400 mx-auto" />
+        <p class="text-sm font-semibold text-zinc-700 dark:text-zinc-300">Aucun besoin ne correspond aux critères</p>
         <button
           type="button"
-          class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-bambu-500 text-white text-xs font-semibold"
-          @click="demandModalOpen = true"
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-bambu-500 text-white text-xs font-semibold shadow-sm"
+          @click="openCreateModal"
         >
           <Plus class="w-3.5 h-3.5" />
-          <span>Créer un premier besoin</span>
+          <span>Créer un besoin</span>
         </button>
       </div>
 
-      <div v-else class="divide-y divide-zinc-800/60">
+      <div v-else class="divide-y divide-zinc-200 dark:divide-zinc-800/70">
         <div
           v-for="d in filteredDemands"
           :key="d.id"
-          class="p-4 sm:p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4 hover:bg-zinc-900/40 transition-colors"
+          class="p-4 flex flex-col lg:flex-row lg:items-center justify-between gap-3 hover:bg-zinc-50 dark:hover:bg-zinc-950/40 transition-colors"
         >
           <!-- Left info -->
-          <div class="space-y-2">
-            <div class="flex items-center gap-2.5 flex-wrap">
-              <span class="text-sm font-bold text-white">{{ d.memberName }}</span>
-              <span class="text-zinc-600">•</span>
-              <span class="text-xs font-mono font-bold text-zinc-300 bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800">
+          <div class="space-y-1.5">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="text-sm font-bold text-zinc-900 dark:text-white">{{ d.memberName }}</span>
+              <span class="text-zinc-300 dark:text-zinc-600">•</span>
+              <span class="text-xs font-mono font-bold text-zinc-700 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded border border-zinc-200 dark:border-zinc-700">
                 {{ d.quantity }} bobine(s)
               </span>
               <BadgeFilament
@@ -285,51 +292,62 @@ function getNextStatus(status: string) {
               />
             </div>
 
-            <div class="flex items-center gap-3 text-xs text-zinc-400 flex-wrap">
-              <span v-if="d.notes" class="italic text-zinc-300">
+            <div class="flex items-center gap-3 text-xs text-zinc-500 dark:text-zinc-400 flex-wrap">
+              <span v-if="d.notes" class="italic text-zinc-700 dark:text-zinc-300">
                 "{{ d.notes }}"
               </span>
-              <span v-if="d.orderNumber" class="font-mono text-bambu-400">
+              <span v-if="d.orderNumber" class="font-mono text-bambu-600 dark:text-bambu-400 font-semibold">
                 Commande: #{{ d.orderNumber }}
               </span>
-              <span class="text-[11px] text-zinc-500">
-                Ajouté le {{ d.createdAt.slice(0, 10) }}
+              <span class="text-[11px] text-zinc-400">
+                Créé le {{ d.createdAt.slice(0, 10) }}
               </span>
             </div>
           </div>
 
           <!-- Right actions & status -->
-          <div class="flex items-center gap-3 self-end lg:self-center flex-wrap">
+          <div class="flex items-center gap-2.5 self-end lg:self-center flex-wrap">
             <StatusBadge :status="d.status" />
 
-            <div class="text-right min-w-[80px]">
-              <span class="text-sm font-bold text-zinc-100 font-mono">
+            <div class="text-right min-w-[75px]">
+              <span class="text-sm font-bold text-zinc-900 dark:text-zinc-100 font-mono">
                 {{ (d.quantity * (d.actualUnitPrice ?? d.estimatedUnitPrice)).toFixed(2) }} €
               </span>
-              <span class="block text-[10px] text-zinc-500">
+              <span class="block text-[10px] text-zinc-400">
                 {{ (d.actualUnitPrice ?? d.estimatedUnitPrice).toFixed(2) }} € / u
               </span>
             </div>
 
-            <!-- Next Lifecycle button -->
-            <div class="flex items-center gap-1.5 pl-2 border-l border-zinc-800">
+            <!-- Action buttons: Modifier (crayon) + Avancer statut + Annuler + Supprimer -->
+            <div class="flex items-center gap-1 pl-2 border-l border-zinc-200 dark:border-zinc-800">
+              <!-- Edit Action (Pencil) -->
+              <button
+                type="button"
+                class="p-1.5 text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors border border-transparent hover:border-zinc-200 dark:hover:border-zinc-700"
+                title="Modifier ce besoin"
+                @click="openEditModal(d)"
+              >
+                <Edit2 class="w-3.5 h-3.5" />
+              </button>
+
+              <!-- Quick Next Status Button -->
               <button
                 v-if="getNextStatus(d.status)"
                 type="button"
-                class="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 hover:text-white border border-zinc-700 transition-colors"
+                class="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-lg bg-zinc-100 hover:bg-zinc-200 text-zinc-800 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 transition-colors"
                 :title="getNextStatus(d.status)!.label"
                 @click="updateStatus(d.id, getNextStatus(d.status)!.next)"
               >
-                <component :is="getNextStatus(d.status)!.icon" class="w-3.5 h-3.5 text-bambu-400" />
-                <span class="hidden sm:inline">{{ getNextStatus(d.status)!.label }}</span>
+                <component :is="getNextStatus(d.status)!.icon" class="w-3 h-3 text-bambu-600 dark:text-bambu-400" />
+                <span class="hidden sm:inline text-[11px]">{{ getNextStatus(d.status)!.label }}</span>
               </button>
 
-              <!-- Cancel button if not canceled -->
+              <!-- Cancel button -->
               <button
                 v-if="d.status !== 'ANNULE' && d.status !== 'DISTRIBUE'"
                 type="button"
-                class="p-1.5 text-zinc-500 hover:text-amber-400 hover:bg-zinc-800 rounded-lg transition-colors"
-                title="Annuler la demande"
+                class="p-1.5 text-zinc-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors"
+                title="Annuler ce besoin"
                 @click="updateStatus(d.id, 'ANNULE')"
               >
                 <XCircle class="w-4 h-4" />
@@ -338,8 +356,8 @@ function getNextStatus(status: string) {
               <!-- Delete button -->
               <button
                 type="button"
-                class="p-1.5 text-zinc-500 hover:text-rose-400 hover:bg-zinc-800 rounded-lg transition-colors"
-                title="Supprimer la demande"
+                class="p-1.5 text-zinc-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors"
+                title="Supprimer définitivement"
                 @click="deleteDemand(d.id)"
               >
                 <Trash2 class="w-4 h-4" />
@@ -354,7 +372,9 @@ function getNextStatus(status: string) {
     <DemandModal
       v-model="demandModalOpen"
       :members="members"
+      :demand-to-edit="demandToEdit"
       @created="loadDemands(); if (triggerRefresh) triggerRefresh()"
+      @updated="loadDemands(); if (triggerRefresh) triggerRefresh()"
     />
 
     <OrderModal

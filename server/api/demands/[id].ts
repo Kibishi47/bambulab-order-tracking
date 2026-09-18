@@ -25,6 +25,7 @@ export default defineEventHandler(async (event) => {
       updatedAt: new Date().toISOString()
     }
 
+    if (body.memberId !== undefined) updateData.memberId = Number(body.memberId)
     if (body.status !== undefined) updateData.status = body.status
     if (body.quantity !== undefined) updateData.quantity = Math.max(1, parseInt(body.quantity))
     if (body.estimatedUnitPrice !== undefined) updateData.estimatedUnitPrice = parseFloat(body.estimatedUnitPrice)
