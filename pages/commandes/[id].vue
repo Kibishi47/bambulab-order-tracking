@@ -3,15 +3,18 @@ import { ref, onMounted, inject, type Ref } from 'vue'
 import BadgeFilament from '~/components/BadgeFilament.vue'
 import StatusBadge from '~/components/StatusBadge.vue'
 import SettlementModal from '~/components/settlements/SettlementModal.vue'
+import OrderEditModal from '~/components/orders/OrderEditModal.vue'
 import { ORDER_STATUSES } from '~/composables/useFilamentColors'
 import {
   Package,
   ArrowLeft,
   Calendar,
-  Trash2,
   Scale,
   CreditCard,
-  Layers
+  Layers,
+  Truck,
+  CheckCheck,
+  Edit2
 } from 'lucide-vue-next'
 
 const route = useRoute()
@@ -22,6 +25,8 @@ const orderId = Number(route.params.id)
 const order = ref<any>(null)
 const loading = ref(true)
 const updatingStatus = ref(false)
+const cascadeLoading = ref(false)
+const orderEditModalOpen = ref(false)
 
 // Settlement modal
 const settlementModalOpen = ref(false)
@@ -67,17 +72,19 @@ async function onStatusChange(newStatus: string) {
   }
 }
 
-async function deleteOrder() {
-  if (!confirm('Voulez-vous supprimer cette commande ? Les besoins associés seront déliés et replacés en statut "DEMANDE".')) {
-    return
-  }
-
+async function triggerCascade(action: 'RECEIVE' | 'DISTRIBUTE') {
+  cascadeLoading.value = true
   try {
-    await $fetch(`/api/orders/${orderId}`, { method: 'DELETE' })
+    await $fetch(`/api/orders/${orderId}/cascade`, {
+      method: 'POST',
+      body: { action }
+    })
+    await loadOrder()
     if (triggerRefresh) triggerRefresh()
-    router.push('/commandes')
   } catch (e) {
-    console.error('Failed to delete order', e)
+    console.error('Failed to execute cascade action', e)
+  } finally {
+    cascadeLoading.value = false
   }
 }
 
@@ -91,8 +98,8 @@ function openSettleForMember(memberId: number, amount: number) {
 
 <template>
   <div class="space-y-6">
-    <!-- Back button & Top bar -->
-    <div class="flex items-center justify-between gap-4">
+    <!-- Back button & Top bar with Contextual Actions -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
       <NuxtLink
         to="/commandes"
         class="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors"
@@ -101,14 +108,42 @@ function openSettleForMember(memberId: number, amount: number) {
         <span>Retour aux commandes</span>
       </NuxtLink>
 
-      <button
-        type="button"
-        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-rose-200 dark:border-rose-900/60 bg-rose-50 dark:bg-rose-950/20 text-rose-700 dark:text-rose-400 hover:bg-rose-100 text-xs font-semibold transition-colors"
-        @click="deleteOrder"
-      >
-        <Trash2 class="w-3.5 h-3.5" />
-        <span>Supprimer la commande</span>
-      </button>
+      <div class="flex items-center gap-2 flex-wrap">
+        <!-- Action rapide : Marquer comme reçue (cascade) -->
+        <button
+          v-if="order && order.status !== 'LIVRE' && order.status !== 'CLOTURE'"
+          type="button"
+          :disabled="cascadeLoading"
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-semibold shadow-sm active:scale-95 transition-all disabled:opacity-50"
+          @click="triggerCascade('RECEIVE')"
+        >
+          <Truck class="w-3.5 h-3.5" />
+          <span>Marquer comme reçue</span>
+        </button>
+
+        <!-- Action rapide : Marquer comme distribuée (cascade) -->
+        <button
+          v-if="order && order.status === 'LIVRE'"
+          type="button"
+          :disabled="cascadeLoading"
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-sm active:scale-95 transition-all disabled:opacity-50"
+          @click="triggerCascade('DISTRIBUTE')"
+        >
+          <CheckCheck class="w-3.5 h-3.5" />
+          <span>Marquer comme distribuée</span>
+        </button>
+
+        <!-- Bouton Édition manuelle complète (la suppression sécurisée s'y trouve) -->
+        <button
+          v-if="order"
+          type="button"
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-xs font-semibold shadow-sm transition-colors"
+          @click="orderEditModalOpen = true"
+        >
+          <Edit2 class="w-3.5 h-3.5" />
+          <span>Modifier la commande</span>
+        </button>
+      </div>
     </div>
 
     <div v-if="loading" class="p-10 text-center text-xs text-zinc-400">
@@ -292,6 +327,16 @@ function openSettleForMember(memberId: number, amount: number) {
       :prefill-receiver-id="prefillReceiver"
       :prefill-amount="prefillAmount"
       @created="loadOrder(); if (triggerRefresh) triggerRefresh()"
+    />
+
+    <!-- Order Edit Modal -->
+    <OrderEditModal
+      v-if="order"
+      v-model="orderEditModalOpen"
+      :order="order"
+      :members="members"
+      @updated="loadOrder(); if (triggerRefresh) triggerRefresh()"
+      @deleted="if (triggerRefresh) triggerRefresh(); router.push('/commandes')"
     />
   </div>
 </template>

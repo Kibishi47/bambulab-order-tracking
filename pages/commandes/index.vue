@@ -6,7 +6,9 @@ import {
   Package,
   Plus,
   Calendar,
-  ChevronRight
+  ChevronRight,
+  Truck,
+  CheckCheck
 } from 'lucide-vue-next'
 
 const triggerRefresh = inject<() => void>('triggerRefresh')
@@ -33,6 +35,19 @@ async function loadOrders() {
     console.error('Error loading orders', e)
   } finally {
     loading.value = false
+  }
+}
+
+async function triggerCascade(orderId: number, action: 'RECEIVE' | 'DISTRIBUTE') {
+  try {
+    await $fetch(`/api/orders/${orderId}/cascade`, {
+      method: 'POST',
+      body: { action }
+    })
+    await loadOrders()
+    if (triggerRefresh) triggerRefresh()
+  } catch (e) {
+    console.error('Failed to execute cascade action', e)
   }
 }
 
@@ -122,7 +137,7 @@ const pendingDemands = computed(() => {
           </div>
         </div>
 
-        <div class="pt-2.5 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between text-xs">
+        <div class="pt-2.5 border-t border-zinc-100 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs">
           <div class="flex items-center gap-2">
             <span class="w-5 h-5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-center font-bold text-[10px]">
               {{ o.buyerName ? o.buyerName.charAt(0).toUpperCase() : '?' }}
@@ -132,10 +147,34 @@ const pendingDemands = computed(() => {
             </span>
           </div>
 
-          <span class="text-bambu-600 dark:text-bambu-400 font-semibold group-hover:translate-x-0.5 transition-transform inline-flex items-center gap-1 text-[11px]">
-            <span>Détail</span>
-            <ChevronRight class="w-3.5 h-3.5" />
-          </span>
+          <div class="flex items-center justify-between sm:justify-end gap-2">
+            <!-- Action rapide en cascade : Marquer comme reçue -->
+            <button
+              v-if="o.status !== 'LIVRE' && o.status !== 'CLOTURE'"
+              type="button"
+              class="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium rounded-lg bg-cyan-50 text-cyan-800 dark:bg-cyan-950/60 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800 hover:bg-cyan-100 dark:hover:bg-cyan-900 transition-colors active:scale-95"
+              @click.prevent.stop="triggerCascade(o.id, 'RECEIVE')"
+            >
+              <Truck class="w-3 h-3" />
+              <span>Marquer reçue</span>
+            </button>
+
+            <!-- Action rapide en cascade : Marquer comme distribuée -->
+            <button
+              v-if="o.status === 'LIVRE'"
+              type="button"
+              class="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium rounded-lg bg-emerald-50 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 dark:hover:bg-emerald-900 transition-colors active:scale-95"
+              @click.prevent.stop="triggerCascade(o.id, 'DISTRIBUTE')"
+            >
+              <CheckCheck class="w-3 h-3" />
+              <span>Marquer distribuée</span>
+            </button>
+
+            <span class="text-bambu-600 dark:text-bambu-400 font-semibold group-hover:translate-x-0.5 transition-transform inline-flex items-center gap-1 text-[11px]">
+              <span>Détail</span>
+              <ChevronRight class="w-3.5 h-3.5" />
+            </span>
+          </div>
         </div>
       </NuxtLink>
     </div>

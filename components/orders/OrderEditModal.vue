@@ -1,0 +1,284 @@
+<script setup lang="ts">
+import { ref, watch } from 'vue'
+import Modal from '~/components/Modal.vue'
+import DatePicker from '~/components/DatePicker.vue'
+import { ORDER_STATUSES } from '~/composables/useFilamentColors'
+import { Edit2, Trash2, Calendar, Hash, User, Euro, Truck } from 'lucide-vue-next'
+
+const props = defineProps<{
+  modelValue: boolean
+  order: any
+  members: Array<{ id: number, name: string }>
+}>()
+
+const emit = defineEmits<{
+  (e: 'update:modelValue', val: boolean): void
+  (e: 'updated'): void
+  (e: 'deleted'): void
+}>()
+
+const orderNumber = ref('')
+const buyerId = ref<number | ''>('')
+const purchaseDate = ref('')
+const status = ref('COMMANDE')
+const totalAmount = ref<number | ''>('')
+const shippingFee = ref<number | ''>(0)
+const shippingSplitMethod = ref<'EQUITABLE' | 'PRORATA'>('EQUITABLE')
+const notes = ref('')
+
+const loading = ref(false)
+const deleting = ref(false)
+const errorMessage = ref('')
+
+watch(() => props.modelValue, (isOpen) => {
+  if (isOpen && props.order) {
+    errorMessage.value = ''
+    orderNumber.value = props.order.orderNumber || ''
+    buyerId.value = props.order.buyerId || ''
+    purchaseDate.value = props.order.purchaseDate || new Date().toISOString().slice(0, 10)
+    status.value = props.order.status || 'COMMANDE'
+    totalAmount.value = props.order.totalAmount !== undefined ? props.order.totalAmount : ''
+    shippingFee.value = props.order.shippingFee !== undefined ? props.order.shippingFee : 0
+    shippingSplitMethod.value = props.order.shippingSplitMethod === 'PRORATA' ? 'PRORATA' : 'EQUITABLE'
+    notes.value = props.order.notes || ''
+  }
+})
+
+async function submit() {
+  if (!orderNumber.value.trim()) {
+    errorMessage.value = 'Le numéro de commande est obligatoire'
+    return
+  }
+  if (!buyerId.value) {
+    errorMessage.value = 'Veuillez sélectionner un acheteur'
+    return
+  }
+  if (totalAmount.value === '' || Number(totalAmount.value) < 0) {
+    errorMessage.value = 'Le montant total doit être valide'
+    return
+  }
+
+  loading.value = true
+  errorMessage.value = ''
+
+  try {
+    await $fetch(`/api/orders/${props.order.id}`, {
+      method: 'PUT',
+      body: {
+        orderNumber: orderNumber.value.trim(),
+        buyerId: Number(buyerId.value),
+        purchaseDate: purchaseDate.value,
+        status: status.value,
+        totalAmount: Number(totalAmount.value),
+        shippingFee: Number(shippingFee.value || 0),
+        shippingSplitMethod: shippingSplitMethod.value,
+        notes: notes.value.trim() || null
+      }
+    })
+
+    emit('updated')
+    emit('update:modelValue', false)
+  } catch (err: any) {
+    errorMessage.value = err.data?.statusMessage || 'Erreur lors de la mise à jour de la commande'
+  } finally {
+    loading.value = false
+  }
+}
+
+async function handleDelete() {
+  if (!confirm('Êtes-vous sûr de vouloir supprimer cette commande ?\n\nLes besoins rattachés repasseront automatiquement au statut "En attente".')) {
+    return
+  }
+
+  deleting.value = true
+  errorMessage.value = ''
+
+  try {
+    await $fetch(`/api/orders/${props.order.id}`, {
+      method: 'DELETE'
+    })
+
+    emit('deleted')
+    emit('update:modelValue', false)
+  } catch (err: any) {
+    errorMessage.value = err.data?.statusMessage || 'Erreur lors de la suppression de la commande'
+  } finally {
+    deleting.value = false
+  }
+}
+</script>
+
+<template>
+  <Modal
+    :model-value="modelValue"
+    title="Modifier la commande"
+    :description="`Mise à jour des informations pour la commande #${order?.orderNumber || ''}`"
+    max-width="max-w-xl"
+    @update:model-value="emit('update:modelValue', $event)"
+  >
+    <form v-if="order" @submit.prevent="submit" class="space-y-4">
+      <div v-if="errorMessage" class="p-3 text-xs text-rose-700 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 rounded-lg">
+        {{ errorMessage }}
+      </div>
+
+      <!-- Numéro de commande & Acheteur -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider mb-1.5">
+            N° Commande Bambu Lab *
+          </label>
+          <div class="relative">
+            <Hash class="w-4 h-4 text-zinc-400 absolute left-3 top-2.5" />
+            <input
+              v-model="orderNumber"
+              type="text"
+              required
+              class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg pl-9 pr-3 py-2 text-xs font-mono font-bold text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-bambu-500"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider mb-1.5">
+            Acheteur (payeur du panier) *
+          </label>
+          <div class="relative">
+            <User class="w-4 h-4 text-zinc-400 absolute left-3 top-2.5 pointer-events-none" />
+            <select
+              v-model="buyerId"
+              required
+              class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg pl-9 pr-3 py-2 text-xs font-semibold text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-bambu-500 appearance-none"
+            >
+              <option value="" disabled>Sélectionner un membre...</option>
+              <option v-for="m in members" :key="m.id" :value="m.id">
+                {{ m.name }}
+              </option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Date d'achat & Statut de la commande -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider mb-1.5">
+            Date d'achat *
+          </label>
+          <DatePicker v-model="purchaseDate" />
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider mb-1.5">
+            Statut de la commande
+          </label>
+          <select
+            v-model="status"
+            class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 text-xs font-semibold text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-bambu-500"
+          >
+            <option v-for="s in ORDER_STATUSES" :key="s.value" :value="s.value">
+              {{ s.label }}
+            </option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Frais de port et mode de répartition -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider mb-1.5">
+            Frais de port réels (€)
+          </label>
+          <div class="relative">
+            <Truck class="w-4 h-4 text-zinc-400 absolute left-3 top-2.5 pointer-events-none" />
+            <input
+              v-model.number="shippingFee"
+              type="number"
+              step="0.01"
+              min="0"
+              placeholder="0.00"
+              class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg pl-9 pr-3 py-2 text-xs font-mono font-bold text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-bambu-500"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider mb-1.5">
+            Répartition des frais
+          </label>
+          <select
+            v-model="shippingSplitMethod"
+            class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 text-xs font-semibold text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-bambu-500"
+          >
+            <option value="EQUITABLE">Équitable (parts égales)</option>
+            <option value="PRORATA">Au pro rata de la valeur</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Montant total réel payé -->
+      <div>
+        <label class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider mb-1.5">
+          Montant réel payé sur le store Bambu Lab (€) *
+        </label>
+        <div class="relative">
+          <Euro class="w-4 h-4 text-zinc-400 absolute left-3 top-2.5" />
+          <input
+            v-model.number="totalAmount"
+            type="number"
+            step="0.01"
+            min="0"
+            required
+            class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg pl-9 pr-3 py-2 text-sm font-mono font-bold text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-bambu-500"
+          />
+        </div>
+      </div>
+
+      <!-- Notes -->
+      <div>
+        <label class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider mb-1.5">
+          Notes de suivi, transporteur, informations de remise
+        </label>
+        <textarea
+          v-model="notes"
+          rows="2"
+          placeholder="Ex: Suivi DHL 123456789, colis arrivé, déposé à l'atelier..."
+          class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-bambu-500"
+        />
+      </div>
+
+      <!-- Boutons d'actions -->
+      <div class="flex items-center justify-between gap-3 pt-3 border-t border-zinc-200 dark:border-zinc-800">
+        <div>
+          <button
+            type="button"
+            :disabled="deleting || loading"
+            class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg text-red-500 hover:bg-red-500/10 border border-transparent hover:border-red-500/20 transition-all disabled:opacity-50"
+            @click="handleDelete"
+          >
+            <Trash2 class="w-3.5 h-3.5" />
+            <span>{{ deleting ? 'Suppression...' : 'Supprimer' }}</span>
+          </button>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <button
+            type="button"
+            class="px-4 py-2 text-xs font-medium text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white transition-colors"
+            @click="emit('update:modelValue', false)"
+          >
+            Annuler
+          </button>
+
+          <button
+            type="submit"
+            :disabled="loading || deleting"
+            class="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-lg bg-bambu-500 text-white hover:bg-bambu-600 active:scale-95 transition-all shadow-sm disabled:opacity-50"
+          >
+            <Edit2 class="w-4 h-4" />
+            <span>{{ loading ? 'Enregistrement...' : 'Enregistrer les modifications' }}</span>
+          </button>
+        </div>
+      </div>
+    </form>
+  </Modal>
+</template>
