@@ -5,11 +5,6 @@ import {
   Layers,
   Package,
   Scale,
-import {
-  LayoutDashboard,
-  Layers,
-  Package,
-  Scale,
   Users,
   Menu,
   X,

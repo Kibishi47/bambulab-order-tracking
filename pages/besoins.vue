@@ -17,7 +17,6 @@ import {
   PackageCheck,
   ShoppingBag,
   Trash2,
-  XCircle,
   Edit2
 } from 'lucide-vue-next'
 
@@ -282,17 +281,25 @@ function getNextStatus(status: string) {
       </div>
 
       <div v-else class="divide-y divide-zinc-200 dark:divide-zinc-800/70">
+        <!-- Desktop Column Headers -->
+        <div class="hidden lg:grid lg:grid-cols-[1fr_130px_110px_190px] items-center gap-4 px-4 py-2.5 bg-zinc-50 dark:bg-zinc-800/40 border-b border-zinc-200 dark:border-zinc-800 text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+          <span>Besoin & Filament</span>
+          <span class="text-center">Statut</span>
+          <span class="text-right">Montant</span>
+          <span class="text-right">Actions</span>
+        </div>
+
         <div
           v-for="d in filteredDemands"
           :key="d.id"
-          class="p-4 flex flex-col lg:flex-row lg:items-center justify-between gap-3"
+          class="p-4 grid grid-cols-1 lg:grid-cols-[1fr_130px_110px_190px] items-center gap-4"
         >
-          <!-- Left info -->
-          <div class="space-y-1.5">
+          <!-- Colonne 1 : Infos membre, filament et commande -->
+          <div class="min-w-0 space-y-1">
             <div class="flex items-center gap-2 flex-wrap">
               <span class="text-sm font-bold text-zinc-900 dark:text-white">{{ d.memberName }}</span>
               <span class="text-zinc-300 dark:text-zinc-600">•</span>
-              <span class="text-xs font-mono font-bold text-zinc-700 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded border border-zinc-200 dark:border-zinc-700">
+              <span class="text-xs font-mono font-bold text-zinc-700 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded border border-zinc-200 dark:border-zinc-700 whitespace-nowrap">
                 {{ d.quantity }} bobine(s)
               </span>
               <BadgeFilament
@@ -304,7 +311,7 @@ function getNextStatus(status: string) {
             </div>
 
             <div class="flex items-center gap-3 text-xs text-zinc-500 dark:text-zinc-400 flex-wrap">
-              <span v-if="d.notes" class="italic text-zinc-700 dark:text-zinc-300">
+              <span v-if="d.notes" class="italic text-zinc-700 dark:text-zinc-300 truncate max-w-md" :title="d.notes">
                 "{{ d.notes }}"
               </span>
               <span v-if="d.orderNumber" class="font-mono text-bambu-600 dark:text-bambu-400 font-semibold">
@@ -316,64 +323,56 @@ function getNextStatus(status: string) {
             </div>
           </div>
 
-          <!-- Right actions & status -->
-          <div class="flex items-center gap-2.5 self-end lg:self-center flex-wrap">
-            <StatusBadge :status="d.status" />
+          <!-- Colonne 2 : Badge de statut (largeur fixe 130px) -->
+          <div class="w-full lg:w-[130px] flex items-center justify-start lg:justify-center">
+            <StatusBadge :status="d.status" class="w-full justify-center" />
+          </div>
 
-            <div class="text-right min-w-[75px]">
-              <span class="text-sm font-bold text-zinc-900 dark:text-zinc-100 font-mono">
-                {{ (d.quantity * (d.actualUnitPrice ?? d.estimatedUnitPrice)).toFixed(2) }} €
-              </span>
-              <span class="block text-[10px] text-zinc-400">
-                {{ (d.actualUnitPrice ?? d.estimatedUnitPrice).toFixed(2) }} € / u
-              </span>
-            </div>
+          <!-- Colonne 3 : Montant total & prix unitaire (largeur fixe 110px, text-right) -->
+          <div class="w-full lg:w-[110px] text-left lg:text-right">
+            <span class="text-sm font-bold text-zinc-900 dark:text-zinc-100 font-mono block">
+              {{ (d.quantity * (d.actualUnitPrice ?? d.estimatedUnitPrice)).toFixed(2) }} €
+            </span>
+            <span class="block text-[10px] text-zinc-400 font-mono">
+              {{ (d.actualUnitPrice ?? d.estimatedUnitPrice).toFixed(2) }} € / u
+            </span>
+          </div>
 
-            <!-- Action buttons: Modifier (crayon) + Avancer statut + Annuler + Supprimer -->
-            <div class="flex items-center gap-1 pl-2 border-l border-zinc-200 dark:border-zinc-800">
-              <!-- Edit Action (Pencil) -->
-              <button
-                type="button"
-                class="p-1.5 text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors border border-transparent hover:border-zinc-200 dark:hover:border-zinc-700"
-                title="Modifier ce besoin"
-                @click="openEditModal(d)"
-              >
-                <Edit2 class="w-3.5 h-3.5" />
-              </button>
+          <!-- Colonne 4 : Zone d'actions alignée à droite (largeur fixe 190px) -->
+          <div class="w-full lg:w-[190px] flex items-center justify-start lg:justify-end gap-2">
+            <!-- Edit Action (Pencil) -->
+            <button
+              type="button"
+              class="p-1.5 text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors border border-transparent hover:border-zinc-200 dark:hover:border-zinc-700 flex-shrink-0"
+              title="Modifier ce besoin"
+              @click="openEditModal(d)"
+            >
+              <Edit2 class="w-3.5 h-3.5" />
+            </button>
 
-              <!-- Quick Next Status Button -->
+            <!-- Standardized Next Status Button (largeur fixe 120px) -->
+            <div class="w-[120px] flex items-center justify-center flex-shrink-0">
               <button
                 v-if="getNextStatus(d.status)"
                 type="button"
-                class="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-lg bg-zinc-100 hover:bg-zinc-200 text-zinc-800 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 transition-colors"
+                class="w-full inline-flex items-center justify-center gap-1 px-2 py-1 text-[11px] font-medium rounded-lg bg-zinc-100 hover:bg-zinc-200 text-zinc-800 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 transition-colors truncate"
                 :title="getNextStatus(d.status)!.label"
                 @click="updateStatus(d.id, getNextStatus(d.status)!.next)"
               >
-                <component :is="getNextStatus(d.status)!.icon" class="w-3 h-3 text-bambu-600 dark:text-bambu-400" />
-                <span class="hidden sm:inline text-[11px]">{{ getNextStatus(d.status)!.label }}</span>
-              </button>
-
-              <!-- Cancel button -->
-              <button
-                v-if="d.status !== 'ANNULE' && d.status !== 'DISTRIBUE'"
-                type="button"
-                class="p-1.5 text-zinc-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors"
-                title="Annuler ce besoin"
-                @click="updateStatus(d.id, 'ANNULE')"
-              >
-                <XCircle class="w-4 h-4" />
-              </button>
-
-              <!-- Delete button -->
-              <button
-                type="button"
-                class="p-1.5 text-zinc-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors"
-                title="Supprimer définitivement"
-                @click="deleteDemand(d.id)"
-              >
-                <Trash2 class="w-4 h-4" />
+                <component :is="getNextStatus(d.status)!.icon" class="w-3 h-3 text-bambu-600 dark:text-bambu-400 flex-shrink-0" />
+                <span class="truncate">{{ getNextStatus(d.status)!.label }}</span>
               </button>
             </div>
+
+            <!-- Delete button -->
+            <button
+              type="button"
+              class="p-1.5 text-zinc-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors flex-shrink-0"
+              title="Supprimer définitivement"
+              @click="deleteDemand(d.id)"
+            >
+              <Trash2 class="w-4 h-4" />
+            </button>
           </div>
         </div>
       </div>

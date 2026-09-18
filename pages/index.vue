@@ -251,10 +251,10 @@ function getNextStatus(status: string) {
         <div
           v-for="d in pendingDemands"
           :key="d.id"
-          class="p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+          class="p-3.5 sm:p-4 grid grid-cols-1 sm:grid-cols-[1fr_130px_90px_180px] items-center gap-3"
         >
           <!-- Item info -->
-          <div class="space-y-1">
+          <div class="min-w-0 space-y-1">
             <div class="flex items-center gap-2 flex-wrap">
               <span class="text-xs font-bold text-zinc-900 dark:text-white">{{ d.memberName }}</span>
               <span class="text-zinc-400 text-xs">•</span>
@@ -267,40 +267,48 @@ function getNextStatus(status: string) {
                 size="sm"
               />
             </div>
-            <div v-if="d.notes" class="text-[11px] text-zinc-500 dark:text-zinc-400 italic">
+            <div v-if="d.notes" class="text-[11px] text-zinc-500 dark:text-zinc-400 italic truncate" :title="d.notes">
               "{{ d.notes }}"
             </div>
           </div>
 
-          <!-- Status & Actions -->
-          <div class="flex items-center gap-2.5 self-end sm:self-center flex-wrap">
-            <span class="text-xs font-mono font-bold text-zinc-900 dark:text-zinc-100 mr-1">
+          <!-- Status badge (Col 2: 130px) -->
+          <div class="w-full sm:w-[130px] flex items-center justify-start sm:justify-center">
+            <StatusBadge :status="d.status" size="sm" class="w-full justify-center" />
+          </div>
+
+          <!-- Price (Col 3: 90px) -->
+          <div class="w-full sm:w-[90px] text-left sm:text-right">
+            <span class="text-xs font-mono font-bold text-zinc-900 dark:text-zinc-100">
               {{ (d.quantity * (d.actualUnitPrice ?? d.estimatedUnitPrice)).toFixed(2) }} €
             </span>
+          </div>
 
-            <StatusBadge :status="d.status" size="sm" />
-
+          <!-- Actions (Col 4: 180px) -->
+          <div class="w-full sm:w-[180px] flex items-center justify-start sm:justify-end gap-2">
             <!-- Edit Button (Pencil) -->
             <button
               type="button"
-              class="p-1.5 text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors border border-transparent hover:border-zinc-200 dark:hover:border-zinc-700"
+              class="p-1.5 text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors border border-transparent hover:border-zinc-200 dark:hover:border-zinc-700 flex-shrink-0"
               title="Modifier ce besoin"
               @click="openEditDemand(d)"
             >
               <Edit2 class="w-3.5 h-3.5" />
             </button>
 
-            <!-- Quick Next Status Button -->
-            <button
-              v-if="getNextStatus(d.status)"
-              type="button"
-              class="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium rounded-lg bg-zinc-100 hover:bg-zinc-200 text-zinc-800 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 transition-colors"
-              :title="getNextStatus(d.status)!.label"
-              @click="quickAdvanceStatus(d)"
-            >
-              <component :is="getNextStatus(d.status)!.icon" class="w-3 h-3 text-bambu-600 dark:text-bambu-400" />
-              <span>{{ getNextStatus(d.status)!.label }}</span>
-            </button>
+            <!-- Standardized Quick Next Status Button -->
+            <div class="w-[120px] flex items-center justify-center flex-shrink-0">
+              <button
+                v-if="getNextStatus(d.status)"
+                type="button"
+                class="w-full inline-flex items-center justify-center gap-1 px-2 py-1 text-[11px] font-medium rounded-lg bg-zinc-100 hover:bg-zinc-200 text-zinc-800 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 transition-colors truncate"
+                :title="getNextStatus(d.status)!.label"
+                @click="quickAdvanceStatus(d)"
+              >
+                <component :is="getNextStatus(d.status)!.icon" class="w-3 h-3 text-bambu-600 dark:text-bambu-400 flex-shrink-0" />
+                <span class="truncate">{{ getNextStatus(d.status)!.label }}</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
