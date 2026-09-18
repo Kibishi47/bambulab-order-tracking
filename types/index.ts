@@ -3,15 +3,15 @@
  * pour l'ensemble de l'application BambuShare.
  */
 
-// --- 1. Énumérations et types d'états métier ---
+// --- 1. Énumérations et types d'états métier (strictement en anglais) ---
 
 export const NeedStatus = {
-  REQUESTED: 'DEMANDE',
-  ASSIGNED: 'PRIS_EN_CHARGE',
-  ORDERED: 'COMMANDE',
-  RECEIVED: 'RECU',
-  DISTRIBUTED: 'DISTRIBUE',
-  CANCELLED: 'ANNULE'
+  REQUESTED: 'REQUESTED',
+  ASSIGNED: 'ASSIGNED',
+  ORDERED: 'ORDERED',
+  RECEIVED: 'RECEIVED',
+  DISTRIBUTED: 'DISTRIBUTED',
+  CANCELLED: 'CANCELLED'
 } as const
 
 export type NeedStatus = (typeof NeedStatus)[keyof typeof NeedStatus]
@@ -25,24 +25,24 @@ export const NEED_STATUS_VALUES = [
 ] as const
 
 export const OrderStatus = {
-  PENDING: 'PREPARATION',
-  ORDERED: 'COMMANDE',
-  RECEIVED: 'LIVRE',
-  DELIVERED: 'LIVRE',
-  DISTRIBUTED: 'CLOTURE',
-  CLOSED: 'CLOTURE'
+  PENDING: 'PENDING',
+  ORDERED: 'ORDERED',
+  RECEIVED: 'RECEIVED',
+  DELIVERED: 'RECEIVED', // Alias pour compatibilité
+  DISTRIBUTED: 'DISTRIBUTED',
+  CLOSED: 'DISTRIBUTED' // Alias pour compatibilité
 } as const
 
-export type OrderStatus = 'PREPARATION' | 'COMMANDE' | 'LIVRE' | 'CLOTURE'
-export const ORDER_STATUS_VALUES = ['PREPARATION', 'COMMANDE', 'LIVRE', 'CLOTURE'] as const
+export type OrderStatus = 'PENDING' | 'ORDERED' | 'RECEIVED' | 'DISTRIBUTED'
+export const ORDER_STATUS_VALUES = ['PENDING', 'ORDERED', 'RECEIVED', 'DISTRIBUTED'] as const
 
 export const PaymentMethod = {
   WERO: 'WERO',
-  TRANSFER: 'VIREMENT',
+  TRANSFER: 'TRANSFER',
   PAYPAL: 'PAYPAL',
-  CASH: 'ESPECES',
+  CASH: 'CASH',
   LYDIA: 'LYDIA',
-  OTHER: 'AUTRE'
+  OTHER: 'OTHER'
 } as const
 
 export type PaymentMethod = (typeof PaymentMethod)[keyof typeof PaymentMethod]
@@ -56,16 +56,16 @@ export const PAYMENT_METHOD_VALUES = [
 ] as const
 
 export const ShippingSplitMode = {
-  EQUAL: 'EQUITABLE',
-  PRO_RATA: 'PRORATA'
+  EQUAL: 'EQUAL',
+  PRO_RATA: 'PRO_RATA'
 } as const
 
 export type ShippingSplitMode = (typeof ShippingSplitMode)[keyof typeof ShippingSplitMode]
 export const SHIPPING_SPLIT_VALUES = [ShippingSplitMode.EQUAL, ShippingSplitMode.PRO_RATA] as const
 
 export const FilamentFormat = {
-  REFILL: 'RECHARGE',
-  SPOOL: 'BOBINE'
+  REFILL: 'REFILL',
+  SPOOL: 'SPOOL'
 } as const
 
 export type FilamentFormat = (typeof FilamentFormat)[keyof typeof FilamentFormat]
