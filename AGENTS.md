@@ -175,7 +175,7 @@ make duplicates   # Analyse du code dupliqué via jscpd
 
 ### 6.1 Intégration Continue (GitHub Actions)
 Le workflow `.github/workflows/ci.yml` s'exécute automatiquement sur tout `push` et toute `pull_request` ciblant la branche `main` :
-- **Environnement** : Ubuntu Latest + Node.js 20 LTS avec cache npm.
+- **Environnement** : Ubuntu Latest + Node.js 22.19.0 avec cache npm.
 - **Étapes exécutées** :
   1. `npm ci`
   2. `npx nuxi prepare` (génération des stubs de types `.nuxt/`)
