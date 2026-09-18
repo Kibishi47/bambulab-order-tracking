@@ -110,7 +110,7 @@ export function seedDatabaseIfEmpty() {
     buyerId: thomas.id,
     purchaseDate: today,
     status: 'COMMANDE',
-    totalAmount: 114.94,
+    totalAmount: 125.93,
     shippingFee: 0,
     notes: 'Livraison express estimée vendredi. Commande passée sur le store EU Bambu Lab.',
     createdAt: now
