@@ -1,5 +1,4 @@
-import { H3Event } from 'h3'
-import { createError } from '#app'
+import { H3Event, getQuery, createError } from 'h3'
 
 export default defineEventHandler((event: H3Event) => {
   const type = getQuery(event).type as string | undefined
