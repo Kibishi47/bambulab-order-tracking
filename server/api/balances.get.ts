@@ -31,6 +31,44 @@ export default defineEventHandler(async () => {
   const allDemands = await db.select().from(filamentDemands).all()
   const allSettlements = await db.select().from(settlements).all()
 
+  // Precompute member consumption for all orders including shipping fee split
+  const activeStatuses = ['COMMANDE', 'RECU', 'DISTRIBUE']
+  const memberConsumptionMap = new Map<number, number>()
+  for (const m of allMembers) {
+    memberConsumptionMap.set(m.id, 0)
+  }
+
+  for (const o of allOrders) {
+    const demandsInOrder = allDemands.filter(d => d.groupOrderId === o.id && activeStatuses.includes(d.status))
+    if (demandsInOrder.length === 0) continue
+
+    const orderParticipants = new Map<number, number>()
+    let orderFilamentsTotal = 0
+
+    for (const d of demandsInOrder) {
+      const price = d.actualUnitPrice ?? d.estimatedUnitPrice
+      const cost = d.quantity * price
+      orderFilamentsTotal += cost
+      orderParticipants.set(d.memberId, (orderParticipants.get(d.memberId) || 0) + cost)
+    }
+
+    const participantsCount = orderParticipants.size
+    const shipping = Number(o.shippingFee || 0)
+
+    for (const [memberId, filamentCost] of orderParticipants.entries()) {
+      let shippingShare = 0
+      if (shipping > 0 && participantsCount > 0) {
+        if (o.shippingSplitMethod === 'PRORATA' && orderFilamentsTotal > 0) {
+          shippingShare = (filamentCost / orderFilamentsTotal) * shipping
+        } else {
+          shippingShare = shipping / participantsCount
+        }
+      }
+      const memberOrderTotal = filamentCost + shippingShare
+      memberConsumptionMap.set(memberId, (memberConsumptionMap.get(memberId) || 0) + memberOrderTotal)
+    }
+  }
+
   const membersBalances: MemberBalance[] = []
 
   for (const m of allMembers) {
@@ -39,13 +77,8 @@ export default defineEventHandler(async () => {
       .filter(o => o.buyerId === m.id)
       .reduce((sum, o) => sum + (o.totalAmount || 0), 0)
 
-    // 2. Total consumed by this member (demands that were ordered or received)
-    const activeStatuses = ['COMMANDE', 'RECU', 'DISTRIBUE']
-    const memberDemandsInOrders = allDemands.filter(d => d.memberId === m.id && activeStatuses.includes(d.status))
-    const totalConsumed = memberDemandsInOrders.reduce((sum, d) => {
-      const price = d.actualUnitPrice ?? d.estimatedUnitPrice
-      return sum + (d.quantity * price)
-    }, 0)
+    // 2. Total consumed by this member (filament demands + shipping share)
+    const totalConsumed = memberConsumptionMap.get(m.id) || 0
 
     // 3. Settlements paid (money sent to reimburse someone)
     const settlementsPaid = allSettlements

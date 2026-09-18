@@ -20,6 +20,7 @@ export default defineEventHandler(async (event) => {
       status: groupOrders.status,
       totalAmount: groupOrders.totalAmount,
       shippingFee: groupOrders.shippingFee,
+      shippingSplitMethod: groupOrders.shippingSplitMethod,
       notes: groupOrders.notes,
       createdAt: groupOrders.createdAt,
       buyerName: members.name,
@@ -71,23 +72,54 @@ export default defineEventHandler(async (event) => {
     .where(eq(settlements.groupOrderId, id))
     .all()
 
-    // Member cost breakdown for this order
-    const memberBreakdownMap = new Map<number, { memberId: number, memberName: string, itemsCount: number, spoolsCount: number, totalCost: number }>()
+    // Member cost breakdown for this order including shipping fee split
+    const memberBreakdownMap = new Map<number, {
+      memberId: number
+      memberName: string
+      itemsCount: number
+      spoolsCount: number
+      filamentCost: number
+      shippingShare: number
+      totalCost: number
+    }>()
+
+    let totalFilamentsValue = 0
 
     for (const d of orderDemands) {
       const unitPrice = d.actualUnitPrice ?? d.estimatedUnitPrice
       const cost = d.quantity * unitPrice
+      totalFilamentsValue += cost
+
       const current = memberBreakdownMap.get(d.memberId) || {
         memberId: d.memberId,
         memberName: d.memberName || 'Membre inconnu',
         itemsCount: 0,
         spoolsCount: 0,
+        filamentCost: 0,
+        shippingShare: 0,
         totalCost: 0
       }
       current.itemsCount += 1
       current.spoolsCount += d.quantity
-      current.totalCost += cost
+      current.filamentCost += cost
       memberBreakdownMap.set(d.memberId, current)
+    }
+
+    const participantsCount = memberBreakdownMap.size
+    const orderShipping = Number(order.shippingFee || 0)
+
+    for (const item of memberBreakdownMap.values()) {
+      let share = 0
+      if (orderShipping > 0 && participantsCount > 0) {
+        if (order.shippingSplitMethod === 'PRORATA' && totalFilamentsValue > 0) {
+          share = (item.filamentCost / totalFilamentsValue) * orderShipping
+        } else {
+          share = orderShipping / participantsCount
+        }
+      }
+      item.shippingShare = Math.round(share * 100) / 100
+      item.filamentCost = Math.round(item.filamentCost * 100) / 100
+      item.totalCost = Math.round((item.filamentCost + item.shippingShare) * 100) / 100
     }
 
     return {
@@ -108,6 +140,7 @@ export default defineEventHandler(async (event) => {
     if (body.status !== undefined) updateData.status = body.status
     if (body.totalAmount !== undefined) updateData.totalAmount = parseFloat(body.totalAmount)
     if (body.shippingFee !== undefined) updateData.shippingFee = parseFloat(body.shippingFee)
+    if (body.shippingSplitMethod !== undefined) updateData.shippingSplitMethod = body.shippingSplitMethod === 'PRORATA' ? 'PRORATA' : 'EQUITABLE'
     if (body.notes !== undefined) updateData.notes = body.notes
 
     const [updated] = await db.update(groupOrders)

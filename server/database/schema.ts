@@ -18,6 +18,7 @@ export const groupOrders = sqliteTable('group_orders', {
   status: text('status', { enum: ['PREPARATION', 'COMMANDE', 'LIVRE', 'CLOTURE'] }).notNull().default('PREPARATION'),
   totalAmount: real('total_amount').notNull(),
   shippingFee: real('shipping_fee').notNull().default(0),
+  shippingSplitMethod: text('shipping_split_method', { enum: ['EQUITABLE', 'PRORATA'] }).notNull().default('EQUITABLE'),
   notes: text('notes'),
   createdAt: text('created_at').notNull()
 })

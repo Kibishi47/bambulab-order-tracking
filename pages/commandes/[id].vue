@@ -153,7 +153,7 @@ function openSettleForMember(memberId: number, amount: number) {
           <div class="p-3 rounded-lg bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800/80">
             <span class="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold">Montant total</span>
             <p class="text-xl font-bold font-mono text-zinc-900 dark:text-zinc-100 mt-0.5">{{ order.totalAmount.toFixed(2) }} €</p>
-            <span class="text-[10px] text-zinc-400">Port inclus : {{ order.shippingFee.toFixed(2) }} €</span>
+            <span class="text-[10px] text-zinc-400">Port : {{ order.shippingFee.toFixed(2) }} € ({{ order.shippingSplitMethod === 'PRORATA' ? 'Pro rata' : 'Équitable' }})</span>
           </div>
 
           <div class="p-3 rounded-lg bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800/80">
@@ -217,6 +217,9 @@ function openSettleForMember(memberId: number, amount: number) {
               <div class="text-right">
                 <span class="text-sm font-bold font-mono text-zinc-900 dark:text-zinc-100">
                   {{ b.totalCost.toFixed(2) }} €
+                </span>
+                <span v-if="order.shippingFee > 0 && b.shippingShare" class="block text-[10px] text-zinc-400 font-mono">
+                  (Bobines: {{ b.filamentCost?.toFixed(2) }} € + Port: {{ b.shippingShare?.toFixed(2) }} €)
                 </span>
                 <span v-if="b.memberId === order.buyerId" class="block text-[10px] text-zinc-400">
                   (Sa part)

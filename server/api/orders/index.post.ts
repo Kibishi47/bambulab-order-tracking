@@ -29,6 +29,7 @@ export default defineEventHandler(async (event) => {
   const now = new Date().toISOString()
   const totalAmount = Math.max(0, parseFloat(body.totalAmount))
   const shippingFee = Math.max(0, parseFloat(body.shippingFee) || 0)
+  const shippingSplitMethod = body.shippingSplitMethod === 'PRORATA' ? 'PRORATA' : 'EQUITABLE'
 
   const [newOrder] = await db.insert(groupOrders).values({
     orderNumber: body.orderNumber.trim(),
@@ -37,6 +38,7 @@ export default defineEventHandler(async (event) => {
     status: body.status || 'COMMANDE',
     totalAmount,
     shippingFee,
+    shippingSplitMethod,
     notes: body.notes?.trim() || null,
     createdAt: now
   }).returning().all()

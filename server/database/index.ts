@@ -50,6 +50,7 @@ function initSchema(sqlite: Database.Database) {
       status TEXT NOT NULL DEFAULT 'PREPARATION',
       total_amount REAL NOT NULL,
       shipping_fee REAL NOT NULL DEFAULT 0,
+      shipping_split_method TEXT NOT NULL DEFAULT 'EQUITABLE',
       notes TEXT,
       created_at TEXT NOT NULL
     );
@@ -83,6 +84,12 @@ function initSchema(sqlite: Database.Database) {
       created_at TEXT NOT NULL
     );
   `)
+
+  try {
+    sqlite.exec(`ALTER TABLE group_orders ADD COLUMN shipping_split_method TEXT NOT NULL DEFAULT 'EQUITABLE';`)
+  } catch {
+    // Column already exists
+  }
 }
 
 
