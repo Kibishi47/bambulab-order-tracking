@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, provide } from 'vue'
 import AppHeader from '~/components/AppHeader.vue'
-import DemandModal from '~/components/demands/DemandModal.vue'
 import { useTheme } from '~/composables/useTheme'
 
 const { initTheme } = useTheme()
@@ -37,7 +36,6 @@ useHead({
   ]
 })
 
-const demandModalOpen = ref(false)
 const members = ref<any[]>([])
 
 async function fetchMembers() {
@@ -66,19 +64,12 @@ onMounted(() => {
 <template>
   <div class="min-h-screen bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100 flex flex-col selection:bg-bambu-500 selection:text-white font-['Plus_Jakarta_Sans',sans-serif] transition-colors duration-150">
     <!-- Top Navigation Header with Light/Dark toggle -->
-    <AppHeader @open-demand-modal="demandModalOpen = true" />
+    <AppHeader />
 
     <!-- Main Content Area -->
     <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
       <NuxtPage />
     </main>
-
-    <!-- Global Filament Demand Modal -->
-    <DemandModal
-      v-model="demandModalOpen"
-      :members="members"
-      @created="triggerGlobalRefresh"
-    />
 
     <!-- Minimalist Footer -->
     <footer class="border-t border-zinc-200 dark:border-zinc-800/60 bg-white/60 dark:bg-zinc-950/60 py-6 text-xs text-zinc-500 dark:text-zinc-400">

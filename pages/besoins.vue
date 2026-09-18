@@ -159,24 +159,14 @@ function getNextStatus(status: string) {
         </p>
       </div>
 
-      <div class="flex items-center gap-2.5">
+      <div v-if="pendingForOrder.length > 0" class="flex items-center gap-2.5">
         <button
-          v-if="pendingForOrder.length > 0"
           type="button"
           class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 border border-zinc-300 dark:border-zinc-700 transition-colors"
           @click="orderModalOpen = true"
         >
           <ShoppingBag class="w-4 h-4 text-bambu-600 dark:text-bambu-400" />
           <span>Créer commande ({{ totalPendingSpools }} bobines)</span>
-        </button>
-
-        <button
-          type="button"
-          class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-lg bg-bambu-500 text-white hover:bg-bambu-600 shadow-sm active:scale-95 transition-all"
-          @click="openCreateModal"
-        >
-          <Plus class="w-4 h-4" />
-          <span>Ajouter un besoin</span>
         </button>
       </div>
     </div>
@@ -251,6 +241,27 @@ function getNextStatus(status: string) {
       </div>
     </div>
 
+    <!-- Action Bar directly above table/list -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
+      <div>
+        <h2 class="text-base font-bold text-zinc-900 dark:text-white">
+          Liste des besoins
+        </h2>
+        <p class="text-xs text-zinc-500 dark:text-zinc-400">
+          {{ filteredDemands.length }} besoin(s) répertorié(s) • {{ totalPendingSpools }} en attente de commande
+        </p>
+      </div>
+
+      <button
+        type="button"
+        class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-lg bg-bambu-500 text-white hover:bg-bambu-600 shadow-sm active:scale-95 transition-all self-start sm:self-auto"
+        @click="openCreateModal"
+      >
+        <Plus class="w-4 h-4" />
+        <span>Nouveau besoin</span>
+      </button>
+    </div>
+
     <!-- Demands List -->
     <div class="rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 overflow-hidden shadow-sm">
       <div v-if="loading" class="p-10 text-center text-xs text-zinc-400">
@@ -274,7 +285,7 @@ function getNextStatus(status: string) {
         <div
           v-for="d in filteredDemands"
           :key="d.id"
-          class="p-4 flex flex-col lg:flex-row lg:items-center justify-between gap-3 hover:bg-zinc-50 dark:hover:bg-zinc-950/40 transition-colors"
+          class="p-4 flex flex-col lg:flex-row lg:items-center justify-between gap-3"
         >
           <!-- Left info -->
           <div class="space-y-1.5">

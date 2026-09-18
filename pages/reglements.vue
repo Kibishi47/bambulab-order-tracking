@@ -188,7 +188,6 @@ async function deleteSettlement(id: number) {
             <tr
               v-for="m in balancesData?.membersBalances"
               :key="m.memberId"
-              class="hover:bg-zinc-50 dark:hover:bg-zinc-950/40 transition-colors"
             >
               <td class="px-4 py-3 font-bold text-zinc-900 dark:text-white">
                 {{ m.memberName }}
@@ -258,7 +257,7 @@ async function deleteSettlement(id: number) {
           <div
             v-for="s in settlements"
             :key="s.id"
-            class="p-3 sm:p-4 flex items-center justify-between gap-3 hover:bg-zinc-50 dark:hover:bg-zinc-950/40 transition-colors"
+            class="p-3 sm:p-4 flex items-center justify-between gap-3"
           >
             <div class="space-y-0.5">
               <div class="flex items-center gap-2 text-xs flex-wrap">

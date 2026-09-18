@@ -8,7 +8,6 @@ import DemandModal from '~/components/demands/DemandModal.vue'
 import {
   Scale,
   ShoppingBag,
-  Plus,
   ArrowRight,
   CheckCircle2,
   ChevronRight,
@@ -129,24 +128,14 @@ function getNextStatus(status: string) {
         </p>
       </div>
 
-      <div class="flex items-center gap-2.5">
+      <div v-if="totalPendingSpools >= 4" class="flex items-center gap-2.5">
         <button
-          v-if="totalPendingSpools >= 4"
           type="button"
           class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 border border-zinc-300 dark:border-zinc-700 transition-colors"
           @click="orderModalOpen = true"
         >
           <ShoppingBag class="w-4 h-4 text-bambu-600 dark:text-bambu-400" />
           <span>Créer commande ({{ totalPendingSpools }} bobines)</span>
-        </button>
-
-        <button
-          type="button"
-          class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-lg bg-bambu-500 text-white hover:bg-bambu-600 active:scale-95 transition-all shadow-sm"
-          @click="demandToEdit = null; demandModalOpen = true"
-        >
-          <Plus class="w-4 h-4" />
-          <span>Nouveau besoin</span>
         </button>
       </div>
     </div>
@@ -262,7 +251,7 @@ function getNextStatus(status: string) {
         <div
           v-for="d in pendingDemands"
           :key="d.id"
-          class="p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-zinc-50 dark:hover:bg-zinc-950/40 transition-colors"
+          class="p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
         >
           <!-- Item info -->
           <div class="space-y-1">

@@ -194,7 +194,7 @@ function openSettleForMember(memberId: number, amount: number) {
           <div
             v-for="b in order.breakdown"
             :key="b.memberId"
-            class="p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-zinc-50 dark:hover:bg-zinc-950/40 transition-colors"
+            class="p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
           >
             <div class="flex items-center gap-2.5">
               <span class="w-7 h-7 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center font-bold text-xs">
@@ -253,7 +253,7 @@ function openSettleForMember(memberId: number, amount: number) {
           <div
             v-for="d in order.demands"
             :key="d.id"
-            class="p-3.5 flex items-center justify-between gap-3 hover:bg-zinc-50 dark:hover:bg-zinc-950/40 transition-colors"
+            class="p-3.5 flex items-center justify-between gap-3"
           >
             <div class="space-y-0.5">
               <div class="flex items-center gap-2 flex-wrap">

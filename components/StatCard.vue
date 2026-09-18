@@ -13,7 +13,7 @@ defineProps<{
 </script>
 
 <template>
-  <div class="relative overflow-hidden rounded-xl bg-[#14161a] border border-zinc-800/80 p-5 shadow-lg shadow-black/20 hover:border-zinc-700/80 transition-all duration-200">
+  <div class="relative overflow-hidden rounded-xl bg-[#14161a] border border-zinc-800/80 p-5 shadow-lg shadow-black/20">
     <div class="flex items-start justify-between">
       <div>
         <p class="text-xs font-medium text-zinc-400 tracking-wider uppercase">

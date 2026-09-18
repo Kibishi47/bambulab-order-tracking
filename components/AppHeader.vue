@@ -5,8 +5,12 @@ import {
   Layers,
   Package,
   Scale,
+import {
+  LayoutDashboard,
+  Layers,
+  Package,
+  Scale,
   Users,
-  PlusCircle,
   Menu,
   X,
   Sun,
@@ -17,10 +21,6 @@ import { useTheme } from '~/composables/useTheme'
 const route = useRoute()
 const mobileMenuOpen = ref(false)
 const { isDark, toggleTheme } = useTheme()
-
-const emit = defineEmits<{
-  (e: 'open-demand-modal'): void
-}>()
 
 const navItems = [
   { label: 'Tableau de bord', to: '/', icon: LayoutDashboard },
@@ -84,7 +84,7 @@ function isActive(path: string) {
           </nav>
         </div>
 
-        <!-- Right Side: Theme toggle + Fast Action Button -->
+        <!-- Right Side: Theme toggle + Mobile Menu Toggle -->
         <div class="flex items-center gap-2.5">
           <!-- Light / Dark Toggle Button -->
           <button
@@ -95,16 +95,6 @@ function isActive(path: string) {
           >
             <Sun v-if="isDark" class="w-4 h-4 text-amber-400" />
             <Moon v-else class="w-4 h-4 text-zinc-600" />
-          </button>
-
-          <!-- Action Button "+ Nouveau besoin" -->
-          <button
-            type="button"
-            class="hidden sm:inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-lg bg-bambu-500 text-white hover:bg-bambu-600 active:scale-95 transition-all shadow-sm"
-            @click="emit('open-demand-modal')"
-          >
-            <PlusCircle class="w-4 h-4" />
-            <span>Nouveau besoin</span>
           </button>
 
           <!-- Mobile Menu Toggle -->
@@ -140,17 +130,6 @@ function isActive(path: string) {
         <component :is="item.icon" class="w-4 h-4 text-bambu-500" />
         <span>{{ item.label }}</span>
       </NuxtLink>
-
-      <div class="pt-3 border-t border-zinc-200 dark:border-zinc-800">
-        <button
-          type="button"
-          class="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-lg bg-bambu-500 text-white hover:bg-bambu-600 transition-all shadow-sm"
-          @click="emit('open-demand-modal'); mobileMenuOpen = false"
-        >
-          <PlusCircle class="w-4 h-4" />
-          <span>Ajouter un besoin de filament</span>
-        </button>
-      </div>
     </div>
   </header>
 </template>
