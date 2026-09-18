@@ -3,8 +3,9 @@ import { ref, computed, watch } from 'vue'
 import Modal from '~/components/Modal.vue'
 import BadgeFilament from '~/components/BadgeFilament.vue'
 import DatePicker from '~/components/DatePicker.vue'
-import { ShoppingCart, Check, Calendar, Hash, User, Euro, PauseCircle, ChevronDown } from 'lucide-vue-next'
-import { ShippingSplitMode, type FilamentDemandDTO } from '~/types'
+import { ShoppingCart, Check, Calendar, Hash, User, Euro, PauseCircle, ChevronDown, Percent, Sparkles } from 'lucide-vue-next'
+import { OrderStatus, ShippingSplitMode, type FilamentDemandDTO } from '~/types'
+import { computeEffectiveUnitPrice, VOLUME_DISCOUNT_TIERS } from '~/utils/pricing'
 
 const props = defineProps<{
   modelValue: boolean
@@ -23,6 +24,8 @@ const purchaseDate = ref(new Date().toISOString().slice(0, 10))
 const totalAmount = ref<number | ''>('')
 const shippingFee = ref(0)
 const shippingSplitMethod = ref<ShippingSplitMode>(ShippingSplitMode.EQUAL)
+const discountPercentage = ref(0)
+const itemEligibilityMap = ref<Record<number, boolean>>({})
 const notes = ref('')
 const selectedDemandIds = ref<number[]>([])
 const showPausedSection = ref(false)
@@ -37,6 +40,20 @@ const pausedDemands = computed(() => {
   return props.pendingDemands.filter(d => !!d.isPaused)
 })
 
+function isDemandEligible(demandId: number): boolean {
+  return itemEligibilityMap.value[demandId] !== false
+}
+
+function toggleDemandEligibility(demandId: number) {
+  itemEligibilityMap.value[demandId] = !isDemandEligible(demandId)
+  autoCalculateTotal()
+}
+
+function setDiscountTier(percentage: number) {
+  discountPercentage.value = percentage
+  autoCalculateTotal()
+}
+
 watch(() => props.modelValue, (isOpen) => {
   if (isOpen) {
     errorMessage.value = ''
@@ -44,6 +61,8 @@ watch(() => props.modelValue, (isOpen) => {
     buyerId.value = ''
     shippingFee.value = 0
     shippingSplitMethod.value = ShippingSplitMode.EQUAL
+    discountPercentage.value = 0
+    itemEligibilityMap.value = {}
     selectedDemandIds.value = activePendingDemands.value.map(d => d.id)
     autoCalculateTotal()
   }
@@ -51,7 +70,10 @@ watch(() => props.modelValue, (isOpen) => {
 
 const selectedDemandsTotal = computed(() => {
   const selected = activePendingDemands.value.filter(d => selectedDemandIds.value.includes(d.id))
-  return selected.reduce((sum, d) => sum + (d.quantity * d.estimatedUnitPrice), 0)
+  return selected.reduce((sum, d) => {
+    const unitPrice = computeEffectiveUnitPrice(d.estimatedUnitPrice, discountPercentage.value, isDemandEligible(d.id))
+    return sum + (d.quantity * unitPrice)
+  }, 0)
 })
 
 const selectedSpoolsCount = computed(() => {
@@ -71,7 +93,43 @@ function toggleSelectAll() {
   } else {
     selectedDemandIds.value = activePendingDemands.value.map(d => d.id)
   }
+  autoCalculateTotal()
 }
+
+const participantsBreakdown = computed(() => {
+  const selected = activePendingDemands.value.filter(d => selectedDemandIds.value.includes(d.id))
+  const map = new Map<number, { name: string; spools: number; filamentCost: number; totalCost: number }>()
+
+  let totalFilaments = 0
+  for (const d of selected) {
+    const debtorId = d.payerMemberId || d.memberId
+    const debtorName = d.payerMemberId ? (d.payerMemberName || 'Payeur') : (d.memberName || 'Membre')
+    const unitPrice = computeEffectiveUnitPrice(d.estimatedUnitPrice, discountPercentage.value, isDemandEligible(d.id))
+    const cost = Math.round(d.quantity * unitPrice * 100) / 100
+    totalFilaments += cost
+
+    const cur = map.get(debtorId) || { name: debtorName, spools: 0, filamentCost: 0, totalCost: 0 }
+    cur.spools += d.quantity
+    cur.filamentCost += cost
+    map.set(debtorId, cur)
+  }
+
+  const shipping = Number(shippingFee.value || 0)
+  const count = map.size
+  for (const item of map.values()) {
+    let share = 0
+    if (shipping > 0 && count > 0) {
+      if (shippingSplitMethod.value === ShippingSplitMode.PRO_RATA && totalFilaments > 0) {
+        share = (item.filamentCost / totalFilaments) * shipping
+      } else {
+        share = shipping / count
+      }
+    }
+    item.totalCost = Math.round((item.filamentCost + share) * 100) / 100
+  }
+
+  return Array.from(map.values())
+})
 
 async function submit() {
   if (!buyerId.value) {
@@ -91,16 +149,20 @@ async function submit() {
   errorMessage.value = ''
 
   try {
+    const ineligibleDemandIds = selectedDemandIds.value.filter(id => !isDemandEligible(id))
+
     await $fetch('/api/orders', {
       method: 'POST',
       body: {
         orderNumber: orderNumber.value.trim(),
         buyerId: Number(buyerId.value),
         purchaseDate: purchaseDate.value,
-        status: 'COMMANDE',
+        status: OrderStatus.ORDERED,
         totalAmount: Number(totalAmount.value),
         shippingFee: Number(shippingFee.value || 0),
         shippingSplitMethod: shippingSplitMethod.value,
+        discountPercentage: Number(discountPercentage.value || 0),
+        ineligibleDemandIds,
         notes: notes.value.trim() || null,
         demandIds: selectedDemandIds.value
       }
@@ -248,6 +310,52 @@ async function submit() {
         </div>
       </div>
 
+      <!-- Ligne 4 : Remise par paliers Bambu Lab -->
+      <div class="p-3.5 rounded-xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800/80 space-y-2.5">
+        <div class="flex items-center justify-between gap-3">
+          <div class="flex items-center gap-1.5">
+            <Percent class="w-4 h-4 text-bambu-500" />
+            <label class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider">
+              Remise par paliers Bambu Lab
+            </label>
+          </div>
+          <div class="flex items-center gap-1.5 text-xs">
+            <span class="text-zinc-500 dark:text-zinc-400 text-[11px]">Taux personnalisé :</span>
+            <div class="relative w-20">
+              <input
+                v-model.number="discountPercentage"
+                type="number"
+                min="0"
+                max="100"
+                step="1"
+                class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded px-2 py-1 text-right text-xs font-bold text-bambu-600 dark:text-bambu-400 focus:outline-none focus:border-bambu-500"
+                @input="autoCalculateTotal"
+              />
+              <span class="absolute right-2 top-1 text-xs text-zinc-400 pointer-events-none">%</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Boutons de présets rapides -->
+        <div class="grid grid-cols-2 sm:grid-cols-5 gap-1.5">
+          <button
+            v-for="tier in VOLUME_DISCOUNT_TIERS"
+            :key="tier.percentage"
+            type="button"
+            class="px-2 py-1.5 rounded-lg border text-xs font-medium transition-all text-center flex flex-col items-center justify-center cursor-pointer active:scale-95"
+            :class="[
+              discountPercentage === tier.percentage
+                ? 'bg-bambu-500 text-white border-bambu-500 shadow-sm font-bold'
+                : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:border-bambu-400 hover:bg-zinc-50 dark:hover:bg-zinc-800'
+            ]"
+            @click="setDiscountTier(tier.percentage)"
+          >
+            <span class="text-xs">{{ tier.label }}</span>
+            <span class="text-[10px] opacity-80">{{ tier.description }}</span>
+          </button>
+        </div>
+      </div>
+
       <!-- Sélection des besoins en attente -->
       <div>
         <div class="flex items-center justify-between mb-1.5">
@@ -268,25 +376,26 @@ async function submit() {
           Aucun besoin actif en attente actuellement. Vous pouvez tout de même créer une commande manuelle.
         </div>
 
-        <div v-else class="max-h-48 overflow-y-auto space-y-1.5 pr-1">
-          <label
+        <div v-else class="max-h-60 overflow-y-auto space-y-1.5 pr-1">
+          <div
             v-for="d in activePendingDemands"
             :key="d.id"
-            class="flex items-center justify-between p-2.5 rounded-lg border cursor-pointer transition-all text-xs"
+            class="flex items-center justify-between p-2.5 rounded-lg border transition-all text-xs gap-3"
             :class="[
               selectedDemandIds.includes(d.id)
-                ? 'bg-bambu-50 border-bambu-500 dark:bg-bambu-500/10 dark:border-bambu-500/60'
+                ? 'bg-bambu-50/50 border-bambu-400 dark:bg-bambu-500/10 dark:border-bambu-500/50'
                 : 'bg-zinc-50 border-zinc-200 hover:bg-zinc-100 dark:bg-zinc-900/50 dark:border-zinc-800'
             ]"
           >
-            <div class="flex items-center gap-2.5">
+            <div class="flex items-center gap-2.5 flex-1 min-w-0">
               <input
                 type="checkbox"
                 :value="d.id"
                 v-model="selectedDemandIds"
-                class="w-4 h-4 rounded border-zinc-300 dark:border-zinc-700 text-bambu-500 focus:ring-bambu-500"
+                @change="autoCalculateTotal"
+                class="w-4 h-4 rounded border-zinc-300 dark:border-zinc-700 text-bambu-500 focus:ring-bambu-500 cursor-pointer"
               />
-              <div>
+              <div class="min-w-0">
                 <div class="flex items-center gap-1.5 flex-wrap">
                   <span class="font-semibold text-zinc-900 dark:text-white">{{ d.memberName }}</span>
                   <span v-if="d.payerMemberName" class="text-[10px] text-amber-600 dark:text-amber-400 font-medium">
@@ -307,12 +416,64 @@ async function submit() {
               </div>
             </div>
 
-            <div class="text-right">
-              <span class="font-bold text-zinc-900 dark:text-zinc-200">
-                {{ (d.quantity * d.estimatedUnitPrice).toFixed(2) }} €
-              </span>
+            <!-- Éligibilité & Prix -->
+            <div class="flex items-center gap-2.5 flex-shrink-0">
+              <!-- Toggle éligibilité à la réduction -->
+              <button
+                v-if="selectedDemandIds.includes(d.id)"
+                type="button"
+                class="px-2 py-1 rounded text-[11px] font-medium border transition-colors cursor-pointer"
+                :class="[
+                  isDemandEligible(d.id)
+                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/40'
+                    : 'bg-zinc-100 text-zinc-500 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:border-zinc-700 line-through'
+                ]"
+                :title="isDemandEligible(d.id) ? 'Cliquez pour exclure de la remise' : 'Cliquez pour inclure dans la remise'"
+                @click.stop.prevent="toggleDemandEligibility(d.id)"
+              >
+                {{ isDemandEligible(d.id) ? 'Éligible remise' : 'Hors remise' }}
+              </button>
+
+              <div class="text-right w-24">
+                <div v-if="discountPercentage > 0 && selectedDemandIds.includes(d.id) && isDemandEligible(d.id)" class="flex flex-col items-end">
+                  <span class="text-[10px] text-zinc-400 line-through font-mono">
+                    {{ (d.quantity * d.estimatedUnitPrice).toFixed(2) }} €
+                  </span>
+                  <span class="font-bold font-mono text-bambu-600 dark:text-bambu-400">
+                    {{ (d.quantity * computeEffectiveUnitPrice(d.estimatedUnitPrice, discountPercentage, true)).toFixed(2) }} €
+                  </span>
+                  <span class="text-[9px] text-zinc-400 font-mono">
+                    ({{ computeEffectiveUnitPrice(d.estimatedUnitPrice, discountPercentage, true).toFixed(2) }} €/u)
+                  </span>
+                </div>
+                <div v-else>
+                  <span class="font-bold font-mono text-zinc-900 dark:text-zinc-200">
+                    {{ (d.quantity * d.estimatedUnitPrice).toFixed(2) }} €
+                  </span>
+                  <span v-if="discountPercentage > 0 && selectedDemandIds.includes(d.id)" class="block text-[9px] text-amber-600 dark:text-amber-400 font-medium">
+                    Plein tarif
+                  </span>
+                </div>
+              </div>
             </div>
-          </label>
+          </div>
+        </div>
+
+        <!-- Récapitulatif par participant -->
+        <div v-if="participantsBreakdown.length > 0" class="mt-3 p-3 rounded-xl bg-zinc-50 dark:bg-zinc-900/40 border border-zinc-200 dark:border-zinc-800/80 space-y-2">
+          <span class="text-[10px] uppercase tracking-wider font-semibold text-zinc-500">
+            Récapitulatif par participant (produits remisés + quote-part port)
+          </span>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+            <div
+              v-for="p in participantsBreakdown"
+              :key="p.name"
+              class="flex items-center justify-between p-2 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800"
+            >
+              <span class="font-medium text-zinc-800 dark:text-zinc-200">{{ p.name }} ({{ p.spools }} bobine{{ p.spools > 1 ? 's' : '' }})</span>
+              <span class="font-bold font-mono text-bambu-600 dark:text-bambu-400">{{ p.totalCost.toFixed(2) }} €</span>
+            </div>
+          </div>
         </div>
 
         <!-- Section repliable des besoins en pause -->

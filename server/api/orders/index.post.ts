@@ -2,6 +2,7 @@ import { getDatabase } from '../../database'
 import { groupOrders, members, filamentDemands, type Order } from '../../database/schema'
 import { eq, inArray, and } from 'drizzle-orm'
 import { OrderStatus, NeedStatus, ShippingSplitMode } from '../../../types'
+import { computeEffectiveUnitPrice } from '../../../utils/pricing'
 
 export default defineEventHandler(async (event): Promise<Order> => {
   const body = await readBody(event)
@@ -32,6 +33,8 @@ export default defineEventHandler(async (event): Promise<Order> => {
   const shippingFee = Math.max(0, parseFloat(body.shippingFee) || 0)
   const shippingSplitMethod = body.shippingSplitMethod === ShippingSplitMode.PRO_RATA ? ShippingSplitMode.PRO_RATA : ShippingSplitMode.EQUAL
 
+  const discountPercentage = Math.min(100, Math.max(0, parseFloat(body.discountPercentage) || 0))
+
   const [newOrder] = await db.insert(groupOrders).values({
     orderNumber: body.orderNumber.trim(),
     buyerId: buyer.id,
@@ -40,21 +43,39 @@ export default defineEventHandler(async (event): Promise<Order> => {
     totalAmount,
     shippingFee,
     shippingSplitMethod,
+    discountPercentage,
     notes: body.notes?.trim() || null,
     createdAt: now
   }).returning().all()
 
-  // If demand IDs are attached, link only non-paused demands and update status to COMMANDE
+  // If demand IDs are attached, link only non-paused demands and compute effective prices
   if (Array.isArray(body.demandIds) && body.demandIds.length > 0) {
     const demandIds = body.demandIds.map(Number)
-    await db.update(filamentDemands)
-      .set({
-        groupOrderId: newOrder.id,
-        status: NeedStatus.ORDERED,
-        updatedAt: now
-      })
+    const ineligibleDemandIdsSet = new Set<number>(
+      Array.isArray(body.ineligibleDemandIds) ? body.ineligibleDemandIds.map(Number) : []
+    )
+
+    const linkedDemands = await db.select()
+      .from(filamentDemands)
       .where(and(inArray(filamentDemands.id, demandIds), eq(filamentDemands.isPaused, false)))
-      .run()
+      .all()
+
+    for (const d of linkedDemands) {
+      const isEligible = !ineligibleDemandIdsSet.has(d.id)
+      const effectiveUnitPrice = computeEffectiveUnitPrice(d.estimatedUnitPrice, discountPercentage, isEligible)
+
+      await db.update(filamentDemands)
+        .set({
+          groupOrderId: newOrder.id,
+          isDiscountEligible: isEligible,
+          effectiveUnitPrice,
+          actualUnitPrice: effectiveUnitPrice,
+          status: NeedStatus.ORDERED,
+          updatedAt: now
+        })
+        .where(eq(filamentDemands.id, d.id))
+        .run()
+    }
   }
 
   return newOrder

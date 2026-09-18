@@ -100,6 +100,8 @@ export interface FilamentDemandDTO {
   quantity: number
   estimatedUnitPrice: number
   actualUnitPrice: number | null
+  effectiveUnitPrice?: number | null
+  isDiscountEligible?: boolean
   status: NeedStatus
   isPaused: boolean
   notes: string | null
@@ -145,6 +147,7 @@ export interface GroupOrderDTO {
   totalAmount: number
   shippingFee: number
   shippingSplitMethod: ShippingSplitMode
+  discountPercentage?: number
   notes: string | null
   createdAt: string
   buyerName?: string

@@ -65,6 +65,7 @@ function initSchema(sqlite: Database.Database) {
       total_amount REAL NOT NULL,
       shipping_fee REAL NOT NULL DEFAULT 0,
       shipping_split_method TEXT NOT NULL DEFAULT 'EQUAL',
+      discount_percentage REAL NOT NULL DEFAULT 0,
       notes TEXT,
       created_at TEXT NOT NULL
     );
@@ -81,6 +82,8 @@ function initSchema(sqlite: Database.Database) {
       quantity INTEGER NOT NULL DEFAULT 1,
       estimated_unit_price REAL NOT NULL DEFAULT 16.99,
       actual_unit_price REAL,
+      effective_unit_price REAL,
+      is_discount_eligible INTEGER NOT NULL DEFAULT 1,
       status TEXT NOT NULL DEFAULT 'REQUESTED',
       is_paused INTEGER NOT NULL DEFAULT 0,
       notes TEXT,
@@ -108,6 +111,12 @@ function initSchema(sqlite: Database.Database) {
   }
 
   try {
+    sqlite.exec(`ALTER TABLE group_orders ADD COLUMN discount_percentage REAL NOT NULL DEFAULT 0;`)
+  } catch {
+    // Column already exists
+  }
+
+  try {
     sqlite.exec(`ALTER TABLE filament_demands ADD COLUMN payer_member_id INTEGER REFERENCES members(id) ON DELETE SET NULL;`)
   } catch {
     // Column already exists
@@ -115,6 +124,18 @@ function initSchema(sqlite: Database.Database) {
 
   try {
     sqlite.exec(`ALTER TABLE filament_demands ADD COLUMN is_paused INTEGER NOT NULL DEFAULT 0;`)
+  } catch {
+    // Column already exists
+  }
+
+  try {
+    sqlite.exec(`ALTER TABLE filament_demands ADD COLUMN is_discount_eligible INTEGER NOT NULL DEFAULT 1;`)
+  } catch {
+    // Column already exists
+  }
+
+  try {
+    sqlite.exec(`ALTER TABLE filament_demands ADD COLUMN effective_unit_price REAL;`)
   } catch {
     // Column already exists
   }

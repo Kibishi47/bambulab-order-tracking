@@ -5,7 +5,8 @@ import ConfirmModal from '~/components/ui/ConfirmModal.vue'
 import DatePicker from '~/components/DatePicker.vue'
 import { ORDER_STATUSES } from '~/composables/useFilamentColors'
 import { OrderStatus, ShippingSplitMode, type GroupOrderDTO } from '~/types'
-import { Edit2, Trash2, Calendar, Hash, User, Euro, Truck } from 'lucide-vue-next'
+import { Edit2, Trash2, Calendar, Hash, User, Euro, Truck, Percent } from 'lucide-vue-next'
+import { VOLUME_DISCOUNT_TIERS } from '~/utils/pricing'
 
 const props = defineProps<{
   modelValue: boolean
@@ -26,11 +27,16 @@ const status = ref<OrderStatus>(OrderStatus.ORDERED)
 const totalAmount = ref<number | ''>('')
 const shippingFee = ref<number | ''>(0)
 const shippingSplitMethod = ref<ShippingSplitMode>(ShippingSplitMode.EQUAL)
+const discountPercentage = ref(0)
 const notes = ref('')
 
 const loading = ref(false)
 const deleting = ref(false)
 const errorMessage = ref('')
+
+function setDiscountTier(percentage: number) {
+  discountPercentage.value = percentage
+}
 
 watch(() => props.modelValue, (isOpen) => {
   if (isOpen && props.order) {
@@ -42,6 +48,7 @@ watch(() => props.modelValue, (isOpen) => {
     totalAmount.value = props.order.totalAmount !== undefined ? props.order.totalAmount : ''
     shippingFee.value = props.order.shippingFee !== undefined ? props.order.shippingFee : 0
     shippingSplitMethod.value = props.order.shippingSplitMethod === ShippingSplitMode.PRO_RATA ? ShippingSplitMode.PRO_RATA : ShippingSplitMode.EQUAL
+    discountPercentage.value = props.order.discountPercentage !== undefined ? props.order.discountPercentage : 0
     notes.value = props.order.notes || ''
   }
 })
@@ -74,6 +81,7 @@ async function submit() {
         totalAmount: Number(totalAmount.value),
         shippingFee: Number(shippingFee.value || 0),
         shippingSplitMethod: shippingSplitMethod.value,
+        discountPercentage: Number(discountPercentage.value || 0),
         notes: notes.value.trim() || null
       }
     })
@@ -138,23 +146,23 @@ async function executeDelete() {
               v-model="orderNumber"
               type="text"
               required
-              class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg pl-9 pr-3 py-2 text-xs font-mono font-bold text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-bambu-500"
+              class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg pl-9 pr-3 py-2 text-xs text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-bambu-500"
             />
           </div>
         </div>
 
         <div>
           <label class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider mb-1.5">
-            Acheteur (payeur du panier) *
+            Acheteur (qui a avancé les fonds) *
           </label>
           <div class="relative">
-            <User class="w-4 h-4 text-zinc-400 absolute left-3 top-2.5 pointer-events-none" />
+            <User class="w-4 h-4 text-zinc-400 absolute left-3 top-2.5" />
             <select
               v-model="buyerId"
               required
-              class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg pl-9 pr-3 py-2 text-xs font-semibold text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-bambu-500 appearance-none"
+              class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg pl-9 pr-3 py-2 text-xs text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-bambu-500"
             >
-              <option value="" disabled>Sélectionner un membre...</option>
+              <option value="" disabled>Sélectionner un membre</option>
               <option v-for="m in members" :key="m.id" :value="m.id">
                 {{ m.name }}
               </option>
@@ -163,18 +171,18 @@ async function executeDelete() {
         </div>
       </div>
 
-      <!-- Date d'achat & Statut de la commande -->
+      <!-- Date d'achat & Statut -->
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <label class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider mb-1.5">
             Date d'achat *
           </label>
-          <DatePicker v-model="purchaseDate" />
+          <DatePicker v-model="purchaseDate" required />
         </div>
 
         <div>
           <label class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider mb-1.5">
-            Statut de la commande
+            Statut
           </label>
           <select
             v-model="status"
@@ -187,14 +195,14 @@ async function executeDelete() {
         </div>
       </div>
 
-      <!-- Frais de port et mode de répartition -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <!-- Frais de port & Répartition -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 rounded-lg bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800/80">
         <div>
           <label class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider mb-1.5">
-            Frais de port réels (€)
+            Frais de port (€)
           </label>
           <div class="relative">
-            <Truck class="w-4 h-4 text-zinc-400 absolute left-3 top-2.5 pointer-events-none" />
+            <Euro class="w-4 h-4 text-zinc-400 absolute left-3 top-2.5" />
             <input
               v-model.number="shippingFee"
               type="number"
@@ -217,6 +225,46 @@ async function executeDelete() {
             <option :value="ShippingSplitMode.EQUAL">{{ ShippingSplitMode.EQUAL }}</option>
             <option :value="ShippingSplitMode.PRO_RATA">{{ ShippingSplitMode.PRO_RATA }}</option>
           </select>
+        </div>
+      </div>
+
+      <!-- Remise par paliers Bambu Lab -->
+      <div class="p-3 rounded-lg bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800/80 space-y-2">
+        <div class="flex items-center justify-between gap-3">
+          <div class="flex items-center gap-1.5">
+            <Percent class="w-3.5 h-3.5 text-bambu-500" />
+            <label class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider">
+              Remise globale (%)
+            </label>
+          </div>
+          <div class="relative w-20">
+            <input
+              v-model.number="discountPercentage"
+              type="number"
+              min="0"
+              max="100"
+              step="1"
+              class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded px-2 py-1 text-right text-xs font-bold text-bambu-600 dark:text-bambu-400 focus:outline-none focus:border-bambu-500"
+            />
+            <span class="absolute right-2 top-1 text-xs text-zinc-400 pointer-events-none">%</span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-5 gap-1">
+          <button
+            v-for="tier in VOLUME_DISCOUNT_TIERS"
+            :key="tier.percentage"
+            type="button"
+            class="px-1.5 py-1 rounded border text-[11px] font-medium transition-all text-center cursor-pointer"
+            :class="[
+              discountPercentage === tier.percentage
+                ? 'bg-bambu-500 text-white border-bambu-500 font-bold'
+                : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:border-bambu-400'
+            ]"
+            @click="setDiscountTier(tier.percentage)"
+          >
+            <span>{{ tier.label }}</span>
+          </button>
         </div>
       </div>
 

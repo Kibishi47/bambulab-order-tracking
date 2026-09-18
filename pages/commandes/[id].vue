@@ -206,7 +206,12 @@ function openSettleForMember(memberId: number, amount: number) {
           <div class="p-3 rounded-lg bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800/80">
             <span class="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold">Montant total</span>
             <p class="text-xl font-bold font-mono text-zinc-900 dark:text-zinc-100 mt-0.5">{{ order.totalAmount.toFixed(2) }} €</p>
-            <span class="text-[10px] text-zinc-400">Port : {{ order.shippingFee.toFixed(2) }} € ({{ order.shippingSplitMethod }})</span>
+            <span class="text-[10px] text-zinc-400">
+              Port : {{ order.shippingFee.toFixed(2) }} € ({{ order.shippingSplitMethod }})
+              <span v-if="order.discountPercentage && order.discountPercentage > 0" class="text-bambu-600 dark:text-bambu-400 font-semibold">
+                • Remise : -{{ order.discountPercentage }}%
+              </span>
+            </span>
           </div>
 
           <div class="p-3 rounded-lg bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800/80">
@@ -249,43 +254,47 @@ function openSettleForMember(memberId: number, amount: number) {
             :key="b.memberId"
             class="p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
           >
-            <div class="flex items-center gap-2.5">
-              <span class="w-7 h-7 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center font-bold text-xs">
-                {{ b.memberName.charAt(0).toUpperCase() }}
-              </span>
-              <div>
-                <div class="flex items-center gap-1.5">
-                  <span class="text-xs font-bold text-zinc-900 dark:text-white">{{ b.memberName }}</span>
-                  <span v-if="b.memberId === order.buyerId" class="text-[10px] font-semibold px-1.5 py-0.2 rounded bg-emerald-50 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/40">
-                    Acheteur
-                  </span>
-                </div>
-                <p class="text-[11px] text-zinc-500 dark:text-zinc-400">
-                  {{ b.spoolsCount }} bobine(s) • {{ b.itemsCount }} besoin(s)
-                </p>
+            <div class="space-y-0.5">
+              <div class="flex items-center gap-2">
+                <span class="text-sm font-bold text-zinc-900 dark:text-white">{{ b.memberName }}</span>
+                <span
+                  v-if="b.memberId === order.buyerId"
+                  class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-bambu-100 text-bambu-800 dark:bg-bambu-500/20 dark:text-bambu-300"
+                >
+                  Acheteur
+                </span>
               </div>
+              <p class="text-xs text-zinc-500 dark:text-zinc-400">
+                {{ b.spoolsCount }} bobine(s) • {{ b.itemsCount }} besoin(s)
+              </p>
             </div>
 
-            <div class="flex items-center gap-3 self-end sm:self-center">
+            <div class="flex items-center gap-4 sm:gap-6 justify-between sm:justify-end">
+              <div class="text-left sm:text-right">
+                <span class="text-[10px] text-zinc-400 block uppercase">Filaments</span>
+                <span class="text-xs font-mono font-semibold text-zinc-800 dark:text-zinc-200">
+                  {{ b.filamentCost.toFixed(2) }} €
+                </span>
+              </div>
+
+              <div class="text-left sm:text-right">
+                <span class="text-[10px] text-zinc-400 block uppercase">Port</span>
+                <span class="text-xs font-mono font-semibold text-zinc-800 dark:text-zinc-200">
+                  {{ b.shippingShare.toFixed(2) }} €
+                </span>
+              </div>
+
               <div class="text-right">
-                <span class="text-sm font-bold font-mono text-zinc-900 dark:text-zinc-100">
+                <span class="text-[10px] text-zinc-400 block uppercase">Total dû</span>
+                <span class="text-sm font-mono font-bold text-bambu-600 dark:text-bambu-400">
                   {{ b.totalCost.toFixed(2) }} €
-                </span>
-                <span v-if="order.shippingFee > 0 && b.shippingShare" class="block text-[10px] text-zinc-400 font-mono">
-                  (Bobines: {{ b.filamentCost?.toFixed(2) }} € + Port: {{ b.shippingShare?.toFixed(2) }} €)
-                </span>
-                <span v-if="b.memberId === order.buyerId" class="block text-[10px] text-zinc-400">
-                  (Sa part)
-                </span>
-                <span v-else class="block text-[10px] text-amber-600 dark:text-amber-400">
-                  À rembourser
                 </span>
               </div>
 
               <button
                 v-if="b.memberId !== order.buyerId"
                 type="button"
-                class="inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[36px] text-xs font-semibold rounded-lg bg-bambu-500 text-white hover:bg-bambu-600 active:scale-95 transition-all shadow-sm shrink-0"
+                class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-zinc-100 hover:bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-200 text-xs font-semibold transition-colors active:scale-95"
                 @click="openSettleForMember(b.memberId, b.totalCost)"
               >
                 <CreditCard class="w-3.5 h-3.5" />
@@ -322,6 +331,12 @@ function openSettleForMember(memberId: number, amount: number) {
                   <span>🎁</span>
                   <span>Offert par <strong>{{ d.payerMemberName }}</strong></span>
                 </span>
+                <span
+                  v-if="order.discountPercentage && order.discountPercentage > 0 && d.isDiscountEligible === false"
+                  class="text-[10px] font-semibold px-1.5 py-0.2 rounded bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700"
+                >
+                  Hors remise
+                </span>
                 <span class="text-zinc-300 dark:text-zinc-600">•</span>
                 <span class="text-xs font-mono font-bold text-zinc-700 dark:text-zinc-300">{{ d.quantity }} bobine(s)</span>
                 <BadgeFilament
@@ -336,9 +351,22 @@ function openSettleForMember(memberId: number, amount: number) {
             </div>
 
             <div class="text-right">
-              <span class="text-xs font-bold font-mono text-zinc-900 dark:text-zinc-200">
-                {{ (d.quantity * (d.actualUnitPrice ?? d.estimatedUnitPrice)).toFixed(2) }} €
-              </span>
+              <div v-if="order.discountPercentage && order.discountPercentage > 0 && d.isDiscountEligible !== false && (d.effectiveUnitPrice ?? d.actualUnitPrice) !== d.estimatedUnitPrice" class="flex flex-col items-end">
+                <span class="text-[10px] text-zinc-400 line-through font-mono">
+                  {{ (d.quantity * d.estimatedUnitPrice).toFixed(2) }} €
+                </span>
+                <span class="text-xs font-bold font-mono text-bambu-600 dark:text-bambu-400">
+                  {{ (d.quantity * (d.effectiveUnitPrice ?? d.actualUnitPrice ?? d.estimatedUnitPrice)).toFixed(2) }} €
+                </span>
+                <span class="text-[9px] text-zinc-400 font-mono">
+                  ({{ (d.effectiveUnitPrice ?? d.actualUnitPrice ?? d.estimatedUnitPrice).toFixed(2) }} €/u)
+                </span>
+              </div>
+              <div v-else>
+                <span class="text-xs font-bold font-mono text-zinc-900 dark:text-zinc-200">
+                  {{ (d.quantity * (d.effectiveUnitPrice ?? d.actualUnitPrice ?? d.estimatedUnitPrice)).toFixed(2) }} €
+                </span>
+              </div>
             </div>
           </div>
         </div>

@@ -47,7 +47,7 @@ export default defineEventHandler(async (): Promise<BalancesResponseDTO> => {
     let orderFilamentsTotal = 0
 
     for (const d of demandsInOrder) {
-      const price = d.actualUnitPrice ?? d.estimatedUnitPrice
+      const price = d.effectiveUnitPrice ?? d.actualUnitPrice ?? d.estimatedUnitPrice
       const cost = d.quantity * price
       orderFilamentsTotal += cost
       const debtorId = d.payerMemberId || d.memberId

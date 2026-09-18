@@ -42,6 +42,8 @@ export default defineEventHandler(async (event): Promise<FilamentDemandDTO[]> =>
     quantity: filamentDemands.quantity,
     estimatedUnitPrice: filamentDemands.estimatedUnitPrice,
     actualUnitPrice: filamentDemands.actualUnitPrice,
+    effectiveUnitPrice: filamentDemands.effectiveUnitPrice,
+    isDiscountEligible: filamentDemands.isDiscountEligible,
     status: filamentDemands.status,
     isPaused: filamentDemands.isPaused,
     notes: filamentDemands.notes,

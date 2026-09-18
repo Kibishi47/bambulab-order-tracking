@@ -398,7 +398,7 @@ async function executeDelete() {
         </div>
         <div>
           <label class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider mb-1.5">
-            Prix unitaire estimé (€) *
+            Prix unitaire de base (€) *
           </label>
           <input
             v-model.number="estimatedUnitPrice"
@@ -408,6 +408,7 @@ async function executeDelete() {
             required
             class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-bambu-500"
           />
+          <p class="text-[10px] text-zinc-400 mt-1">Prix catalogue Bambu Lab sans réduction.</p>
         </div>
       </div>
 

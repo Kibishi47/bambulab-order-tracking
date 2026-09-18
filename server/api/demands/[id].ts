@@ -35,6 +35,8 @@ export default defineEventHandler(async (event): Promise<Need | { success: boole
     if (body.filamentType !== undefined) updateData.filamentType = body.filamentType
     if (body.colorName !== undefined) updateData.colorName = body.colorName
     if (body.colorHex !== undefined) updateData.colorHex = body.colorHex
+    if (body.isDiscountEligible !== undefined) updateData.isDiscountEligible = Boolean(body.isDiscountEligible)
+    if (body.effectiveUnitPrice !== undefined) updateData.effectiveUnitPrice = body.effectiveUnitPrice !== null ? parseFloat(body.effectiveUnitPrice) : null
     if (body.isPaused !== undefined) updateData.isPaused = Boolean(body.isPaused)
     if (body.notes !== undefined) updateData.notes = body.notes
     if (body.groupOrderId !== undefined) updateData.groupOrderId = body.groupOrderId

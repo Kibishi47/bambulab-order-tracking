@@ -3,6 +3,7 @@ import { groupOrders, members, filamentDemands, settlements } from '../../databa
 import { eq } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/sqlite-core'
 import { NeedStatus, ShippingSplitMode } from '../../../types'
+import { computeEffectiveUnitPrice } from '../../../utils/pricing'
 
 export default defineEventHandler(async (event) => {
   const id = Number(getRouterParam(event, 'id'))
@@ -25,6 +26,7 @@ export default defineEventHandler(async (event) => {
       totalAmount: groupOrders.totalAmount,
       shippingFee: groupOrders.shippingFee,
       shippingSplitMethod: groupOrders.shippingSplitMethod,
+      discountPercentage: groupOrders.discountPercentage,
       notes: groupOrders.notes,
       createdAt: groupOrders.createdAt,
       buyerName: members.name,
@@ -53,6 +55,8 @@ export default defineEventHandler(async (event) => {
       quantity: filamentDemands.quantity,
       estimatedUnitPrice: filamentDemands.estimatedUnitPrice,
       actualUnitPrice: filamentDemands.actualUnitPrice,
+      effectiveUnitPrice: filamentDemands.effectiveUnitPrice,
+      isDiscountEligible: filamentDemands.isDiscountEligible,
       status: filamentDemands.status,
       isPaused: filamentDemands.isPaused,
       notes: filamentDemands.notes,
@@ -94,7 +98,7 @@ export default defineEventHandler(async (event) => {
     let totalFilamentsValue = 0
 
     for (const d of orderDemands) {
-      const unitPrice = d.actualUnitPrice ?? d.estimatedUnitPrice
+      const unitPrice = d.effectiveUnitPrice ?? d.actualUnitPrice ?? d.estimatedUnitPrice
       const cost = d.quantity * unitPrice
       totalFilamentsValue += cost
 
@@ -116,16 +120,17 @@ export default defineEventHandler(async (event) => {
       memberBreakdownMap.set(debtorId, current)
     }
 
+    // Distribute shipping fee
     const participantsCount = memberBreakdownMap.size
-    const orderShipping = Number(order.shippingFee || 0)
+    const shipping = order.shippingFee
 
     for (const item of memberBreakdownMap.values()) {
       let share = 0
-      if (orderShipping > 0 && participantsCount > 0) {
+      if (shipping > 0 && participantsCount > 0) {
         if (order.shippingSplitMethod === ShippingSplitMode.PRO_RATA && totalFilamentsValue > 0) {
-          share = (item.filamentCost / totalFilamentsValue) * orderShipping
+          share = (item.filamentCost / totalFilamentsValue) * shipping
         } else {
-          share = orderShipping / participantsCount
+          share = shipping / participantsCount
         }
       }
       item.shippingShare = Math.round(share * 100) / 100
@@ -152,6 +157,7 @@ export default defineEventHandler(async (event) => {
     if (body.totalAmount !== undefined) updateData.totalAmount = parseFloat(body.totalAmount)
     if (body.shippingFee !== undefined) updateData.shippingFee = parseFloat(body.shippingFee)
     if (body.shippingSplitMethod !== undefined) updateData.shippingSplitMethod = body.shippingSplitMethod === ShippingSplitMode.PRO_RATA ? ShippingSplitMode.PRO_RATA : ShippingSplitMode.EQUAL
+    if (body.discountPercentage !== undefined) updateData.discountPercentage = Math.min(100, Math.max(0, parseFloat(body.discountPercentage) || 0))
     if (body.notes !== undefined) updateData.notes = body.notes
 
     const [updated] = await db.update(groupOrders)
@@ -162,6 +168,24 @@ export default defineEventHandler(async (event) => {
 
     if (!updated) {
       throw createError({ statusCode: 404, statusMessage: 'Commande non trouvée' })
+    }
+
+    // If discountPercentage or ineligibleDemandIds changed, update linked demands
+    if (body.discountPercentage !== undefined || body.ineligibleDemandIds !== undefined) {
+      const discount = updateData.discountPercentage ?? updated.discountPercentage ?? 0
+      const ineligibleSet = body.ineligibleDemandIds ? new Set<number>(body.ineligibleDemandIds.map(Number)) : null
+
+      const linked = await db.select().from(filamentDemands).where(eq(filamentDemands.groupOrderId, id)).all()
+      for (const ld of linked) {
+        const isEligible = ineligibleSet !== null ? !ineligibleSet.has(ld.id) : (ld.isDiscountEligible ?? true)
+        const effectiveUnitPrice = computeEffectiveUnitPrice(ld.estimatedUnitPrice, discount, isEligible)
+        await db.update(filamentDemands).set({
+          isDiscountEligible: isEligible,
+          effectiveUnitPrice,
+          actualUnitPrice: effectiveUnitPrice,
+          updatedAt: new Date().toISOString()
+        }).where(eq(filamentDemands.id, ld.id)).run()
+      }
     }
 
     return updated

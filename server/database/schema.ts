@@ -26,6 +26,7 @@ export const groupOrders = sqliteTable('group_orders', {
   totalAmount: real('total_amount').notNull(),
   shippingFee: real('shipping_fee').notNull().default(0),
   shippingSplitMethod: text('shipping_split_method', { enum: SHIPPING_SPLIT_VALUES }).notNull().default('EQUAL'),
+  discountPercentage: real('discount_percentage').notNull().default(0),
   notes: text('notes'),
   createdAt: text('created_at').notNull()
 })
@@ -42,6 +43,8 @@ export const filamentDemands = sqliteTable('filament_demands', {
   quantity: integer('quantity').notNull().default(1),
   estimatedUnitPrice: real('estimated_unit_price').notNull().default(16.99),
   actualUnitPrice: real('actual_unit_price'),
+  effectiveUnitPrice: real('effective_unit_price'),
+  isDiscountEligible: integer('is_discount_eligible', { mode: 'boolean' }).notNull().default(true),
   status: text('status', { enum: NEED_STATUS_VALUES }).notNull().default('REQUESTED'),
   isPaused: integer('is_paused', { mode: 'boolean' }).notNull().default(false),
   notes: text('notes'),
