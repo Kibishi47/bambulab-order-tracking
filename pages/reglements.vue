@@ -15,6 +15,7 @@ import type {
   MemberDTO,
   SettlementDTO
 } from '~/types'
+import { formatPaymentMethod } from '~/utils/labels'
 
 const triggerRefresh = inject<() => void>('triggerRefresh')
 const refreshKey = inject<Ref<number>>('refreshKey', ref(0))
@@ -263,8 +264,8 @@ function openEditSettlement(s: SettlementDTO) {
                 <ArrowRight class="w-3 h-3 text-zinc-400" />
                 <span class="font-bold text-zinc-900 dark:text-white">{{ s.receiverName }}</span>
                 <span class="text-zinc-300 dark:text-zinc-600">•</span>
-                <span class="px-1.5 py-0.2 rounded bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-[10px] font-semibold text-zinc-700 dark:text-zinc-300 uppercase">
-                  {{ s.paymentMethod }}
+                <span class="px-1.5 py-0.2 rounded bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-[10px] font-semibold text-zinc-700 dark:text-zinc-300">
+                  {{ formatPaymentMethod(s.paymentMethod) }}
                 </span>
               </div>
               <div class="flex items-center gap-2 text-[11px] text-zinc-500 dark:text-zinc-400">

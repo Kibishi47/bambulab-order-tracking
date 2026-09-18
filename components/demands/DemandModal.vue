@@ -342,10 +342,10 @@ async function executeDelete() {
             @click="setFormat(FilamentFormat.REFILL)"
           >
             <div class="flex items-center justify-between">
-              <span class="text-xs font-semibold">REFILL</span>
-              <span class="text-[10px] font-mono px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/40">Eco</span>
+              <span class="text-xs font-semibold">Recharge</span>
+              <span class="text-[10px] font-mono px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/40">Éco</span>
             </div>
-            <p class="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">Refill pack without plastic spool.</p>
+            <p class="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">Recharge sans bobine plastique.</p>
           </button>
 
           <button
@@ -359,10 +359,10 @@ async function executeDelete() {
             @click="setFormat(FilamentFormat.SPOOL)"
           >
             <div class="flex items-center justify-between">
-              <span class="text-xs font-semibold">SPOOL</span>
-              <span class="text-[10px] text-zinc-500 dark:text-zinc-400">+ spool</span>
+              <span class="text-xs font-semibold">Bobine</span>
+              <span class="text-[10px] text-zinc-500 dark:text-zinc-400">+ bobine</span>
             </div>
-            <p class="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">Filament with reusable spool.</p>
+            <p class="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">Filament avec bobine réutilisable.</p>
           </button>
         </div>
       </div>

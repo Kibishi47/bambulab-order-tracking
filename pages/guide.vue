@@ -20,6 +20,7 @@ import {
 } from 'lucide-vue-next'
 import { DISCOUNT_THRESHOLD } from '~/composables/useDiscountThreshold'
 import { NeedStatus } from '~/types'
+import { NEED_STATUS_LABELS } from '~/utils/labels'
 
 useHead({
   title: 'Comment ça marche ? - BambuShare',
@@ -126,7 +127,7 @@ const selectedStep = ref<number>(0)
 const stepsCycle = [
   {
     id: NeedStatus.REQUESTED,
-    label: NeedStatus.REQUESTED,
+    label: NEED_STATUS_LABELS[NeedStatus.REQUESTED],
     badgeClass: 'bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700',
     icon: Layers,
     summary: 'Le besoin est exprimé par un membre et attend d\'être regroupé.',
@@ -134,7 +135,7 @@ const stepsCycle = [
   },
   {
     id: NeedStatus.ORDERED,
-    label: NeedStatus.ORDERED,
+    label: NEED_STATUS_LABELS[NeedStatus.ORDERED],
     badgeClass: 'bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 border-blue-200 dark:border-blue-800/40',
     icon: ShoppingBag,
     summary: 'La bobine a été payée sur le store Bambu Lab par l\'acheteur.',
@@ -142,15 +143,15 @@ const stepsCycle = [
   },
   {
     id: NeedStatus.RECEIVED,
-    label: NeedStatus.RECEIVED,
+    label: NEED_STATUS_LABELS[NeedStatus.RECEIVED],
     badgeClass: 'bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300 border-amber-200 dark:border-amber-800/40',
     icon: Truck,
     summary: 'Le colis est arrivé chez l\'acheteur ou au lieu de dépôt.',
-    action: 'L\'acheteur utilise l\'action rapide en cascade pour basculer tous les articles de la commande en « RECEIVED » dès l\'ouverture du colis.'
+    action: 'L\'acheteur utilise l\'action rapide en cascade pour basculer tous les articles de la commande en « Reçu » dès l\'ouverture du colis.'
   },
   {
     id: NeedStatus.DISTRIBUTED,
-    label: NeedStatus.DISTRIBUTED,
+    label: NEED_STATUS_LABELS[NeedStatus.DISTRIBUTED],
     badgeClass: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/40',
     icon: PackageCheck,
     summary: 'La bobine est entre les mains de son propriétaire final.',

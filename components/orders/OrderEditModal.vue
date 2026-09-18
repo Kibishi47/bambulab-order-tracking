@@ -7,6 +7,7 @@ import { ORDER_STATUSES } from '~/composables/useFilamentColors'
 import { OrderStatus, ShippingSplitMode, type GroupOrderDTO } from '~/types'
 import { Edit2, Trash2, Calendar, Hash, User, Euro, Truck, Percent } from 'lucide-vue-next'
 import { VOLUME_DISCOUNT_TIERS } from '~/utils/pricing'
+import { formatShippingSplitMode } from '~/utils/labels'
 
 const props = defineProps<{
   modelValue: boolean
@@ -222,8 +223,8 @@ async function executeDelete() {
             v-model="shippingSplitMethod"
             class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 text-xs font-semibold text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-bambu-500"
           >
-            <option :value="ShippingSplitMode.EQUAL">{{ ShippingSplitMode.EQUAL }}</option>
-            <option :value="ShippingSplitMode.PRO_RATA">{{ ShippingSplitMode.PRO_RATA }}</option>
+            <option :value="ShippingSplitMode.EQUAL">{{ formatShippingSplitMode(ShippingSplitMode.EQUAL) }}</option>
+            <option :value="ShippingSplitMode.PRO_RATA">{{ formatShippingSplitMode(ShippingSplitMode.PRO_RATA) }}</option>
           </select>
         </div>
       </div>

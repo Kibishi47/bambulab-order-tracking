@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { DEMAND_STATUSES, ORDER_STATUSES } from '~/composables/useFilamentColors'
 import type { NeedStatus, OrderStatus } from '~/types'
+import { formatNeedStatus, formatOrderStatus } from '~/utils/labels'
 
 const props = defineProps<{
   status: NeedStatus | OrderStatus | string
@@ -11,9 +12,15 @@ const props = defineProps<{
 const config = computed(() => {
   const list = props.type === 'order' ? ORDER_STATUSES : DEMAND_STATUSES
   const found = list.find(s => s.value === props.status)
-  return found || {
+  if (found) return found
+
+  const fallbackLabel = props.type === 'order'
+    ? formatOrderStatus(props.status)
+    : formatNeedStatus(props.status)
+
+  return {
     value: props.status,
-    label: props.status,
+    label: fallbackLabel || props.status,
     color: 'bg-zinc-800 text-zinc-400 border-zinc-700'
   }
 })

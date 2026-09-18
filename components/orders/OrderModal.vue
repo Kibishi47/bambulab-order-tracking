@@ -6,6 +6,7 @@ import DatePicker from '~/components/DatePicker.vue'
 import { ShoppingCart, Check, Calendar, Hash, User, Euro, PauseCircle, ChevronDown, Percent, Sparkles } from 'lucide-vue-next'
 import { OrderStatus, ShippingSplitMode, type FilamentDemandDTO } from '~/types'
 import { computeEffectiveUnitPrice, VOLUME_DISCOUNT_TIERS } from '~/utils/pricing'
+import { formatShippingSplitMode } from '~/utils/labels'
 
 const props = defineProps<{
   modelValue: boolean
@@ -301,11 +302,11 @@ async function submit() {
             v-model="shippingSplitMethod"
             class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-bambu-500"
           >
-            <option :value="ShippingSplitMode.EQUAL">{{ ShippingSplitMode.EQUAL }}</option>
-            <option :value="ShippingSplitMode.PRO_RATA">{{ ShippingSplitMode.PRO_RATA }}</option>
+            <option :value="ShippingSplitMode.EQUAL">{{ formatShippingSplitMode(ShippingSplitMode.EQUAL) }}</option>
+            <option :value="ShippingSplitMode.PRO_RATA">{{ formatShippingSplitMode(ShippingSplitMode.PRO_RATA) }}</option>
           </select>
           <p class="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1">
-            {{ shippingSplitMethod === ShippingSplitMode.EQUAL ? 'Equally divided among participants.' : 'Proportional to filament amount per participant.' }}
+            {{ shippingSplitMethod === ShippingSplitMode.EQUAL ? 'Frais divisés équitablement entre les participants.' : 'Frais répartis au pro-rata de la valeur des filaments commandés.' }}
           </p>
         </div>
       </div>

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { BAMBU_FILAMENT_TYPES } from '~/composables/useFilamentColors'
 import { FilamentFormat } from '~/types'
+import { formatFilamentFormat } from '~/utils/labels'
 
 const props = defineProps<{
   type: string
@@ -43,7 +44,7 @@ const isLightColor = computed(() => {
       {{ typeConfig.name }}
     </span>
 
-    <!-- Format Pill (REFILL vs SPOOL) -->
+    <!-- Format Pill (Recharge vs Bobine) -->
     <span
       v-if="format"
       class="inline-flex items-center rounded-md border font-medium text-[11px]"
@@ -54,7 +55,7 @@ const isLightColor = computed(() => {
         size === 'sm' ? 'px-1.5 py-0.5 text-[10px]' : 'px-2 py-0.5'
       ]"
     >
-      {{ format }}
+      {{ formatFilamentFormat(format) }}
     </span>
 
     <!-- Color Swatch & Label -->

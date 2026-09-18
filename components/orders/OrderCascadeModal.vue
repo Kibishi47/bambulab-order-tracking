@@ -5,6 +5,7 @@ import BadgeFilament from '~/components/BadgeFilament.vue'
 import StatusBadge from '~/components/StatusBadge.vue'
 import { Truck, CheckCheck, AlertCircle, ArrowRight } from 'lucide-vue-next'
 import { NeedStatus, OrderStatus, type GroupOrderDTO, type CascadeAction, type FilamentDemandDTO } from '~/types'
+import { formatNeedStatus, formatOrderStatus } from '~/utils/labels'
 
 const props = defineProps<{
   modelValue: boolean
@@ -22,7 +23,7 @@ const isReceive = computed(() => props.action === 'RECEIVE')
 
 const requiredPreviousStatus = computed<NeedStatus>(() => isReceive.value ? NeedStatus.ORDERED : NeedStatus.RECEIVED)
 const targetDemandStatus = computed<NeedStatus>(() => isReceive.value ? NeedStatus.RECEIVED : NeedStatus.DISTRIBUTED)
-const targetOrderStatusLabel = computed(() => isReceive.value ? OrderStatus.RECEIVED : OrderStatus.DISTRIBUTED)
+const targetOrderStatusLabel = computed(() => isReceive.value ? formatOrderStatus(OrderStatus.RECEIVED) : formatOrderStatus(OrderStatus.DISTRIBUTED))
 
 const demands = computed<FilamentDemandDTO[]>(() => props.order?.demands || [])
 
@@ -65,7 +66,7 @@ const confirmButtonText = computed(() => {
   >
     <div v-if="order" class="space-y-4">
       <!-- Bloc d'impact principal -->
-      <div class="p-3 rounded-lg bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-2">
+      <div class="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 space-y-2">
         <div class="flex items-center justify-between text-xs">
           <span class="text-zinc-500 dark:text-zinc-400">Commande concernée :</span>
           <span class="font-mono font-bold text-zinc-900 dark:text-white">#{{ order.orderNumber }}</span>
@@ -87,9 +88,9 @@ const confirmButtonText = computed(() => {
           <p>
             <strong class="text-zinc-900 dark:text-white font-bold">{{ eligibleDemands.length }} besoin(s)</strong>
             ({{ eligibleSpoolsCount }} bobines) actuellement au statut
-            <em class="font-semibold text-zinc-800 dark:text-zinc-200">« {{ requiredPreviousStatus }} »</em>
+            <em class="font-semibold text-zinc-800 dark:text-zinc-200">« {{ formatNeedStatus(requiredPreviousStatus) }} »</em>
             passeront automatiquement au statut
-            <strong class="text-bambu-600 dark:text-bambu-400 font-bold">« {{ targetDemandStatus }} »</strong>.
+            <strong class="text-bambu-600 dark:text-bambu-400 font-bold">« {{ formatNeedStatus(targetDemandStatus) }} »</strong>.
           </p>
         </div>
 
@@ -98,7 +99,7 @@ const confirmButtonText = computed(() => {
           <AlertCircle class="w-4 h-4 flex-shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
           <p>
             <strong>Garde-fou :</strong> {{ ignoredDemands.length }} besoin(s) ne sont pas au statut
-            « {{ requiredPreviousStatus }} » (annulés ou déjà traités) et
+            « {{ formatNeedStatus(requiredPreviousStatus) }} » (annulés ou déjà traités) et
             <strong>resteront strictement inchangés</strong>.
           </p>
         </div>
@@ -111,7 +112,7 @@ const confirmButtonText = computed(() => {
           <span v-if="eligibleDemands.length === 0" class="text-rose-500">Aucun article éligible</span>
         </div>
 
-        <div v-if="eligibleDemands.length > 0" class="max-h-48 overflow-y-auto rounded-lg border border-zinc-200 dark:border-zinc-800 divide-y divide-zinc-200 dark:divide-zinc-800/60 bg-zinc-50/50 dark:bg-zinc-950/50 p-1">
+        <div v-if="eligibleDemands.length > 0" class="max-h-48 overflow-y-auto rounded-xl border border-zinc-200 dark:border-zinc-800 divide-y divide-zinc-200 dark:divide-zinc-800/60 bg-zinc-50/50 dark:bg-zinc-900/50 p-1">
           <div
             v-for="d in eligibleDemands"
             :key="d.id"
@@ -131,9 +132,9 @@ const confirmButtonText = computed(() => {
             </div>
 
             <div class="flex items-center gap-1.5 text-[10px] font-mono shrink-0">
-              <span class="text-zinc-400">{{ d.status }}</span>
+              <span class="text-zinc-400">{{ formatNeedStatus(d.status) }}</span>
               <ArrowRight class="w-3 h-3 text-bambu-500" />
-              <span class="font-bold text-bambu-600 dark:text-bambu-400">{{ targetDemandStatus }}</span>
+              <span class="font-bold text-bambu-600 dark:text-bambu-400">{{ formatNeedStatus(targetDemandStatus) }}</span>
             </div>
           </div>
         </div>
