@@ -47,10 +47,10 @@ function initSchema(sqlite: Database.Database) {
       order_number TEXT NOT NULL,
       buyer_id INTEGER NOT NULL REFERENCES members(id) ON DELETE CASCADE,
       purchase_date TEXT NOT NULL,
-      status TEXT NOT NULL DEFAULT 'PREPARATION',
+      status TEXT NOT NULL DEFAULT 'PENDING',
       total_amount REAL NOT NULL,
       shipping_fee REAL NOT NULL DEFAULT 0,
-      shipping_split_method TEXT NOT NULL DEFAULT 'EQUITABLE',
+      shipping_split_method TEXT NOT NULL DEFAULT 'EQUAL',
       notes TEXT,
       created_at TEXT NOT NULL
     );
@@ -61,13 +61,13 @@ function initSchema(sqlite: Database.Database) {
       payer_member_id INTEGER REFERENCES members(id) ON DELETE SET NULL,
       group_order_id INTEGER REFERENCES group_orders(id) ON DELETE SET NULL,
       filament_type TEXT NOT NULL,
-      format TEXT NOT NULL DEFAULT 'RECHARGE',
+      format TEXT NOT NULL DEFAULT 'REFILL',
       color_name TEXT NOT NULL,
       color_hex TEXT NOT NULL,
       quantity INTEGER NOT NULL DEFAULT 1,
       estimated_unit_price REAL NOT NULL DEFAULT 16.99,
       actual_unit_price REAL,
-      status TEXT NOT NULL DEFAULT 'DEMANDE',
+      status TEXT NOT NULL DEFAULT 'REQUESTED',
       is_paused INTEGER NOT NULL DEFAULT 0,
       notes TEXT,
       created_at TEXT NOT NULL,
@@ -80,7 +80,7 @@ function initSchema(sqlite: Database.Database) {
       payer_id INTEGER NOT NULL REFERENCES members(id) ON DELETE CASCADE,
       receiver_id INTEGER NOT NULL REFERENCES members(id) ON DELETE CASCADE,
       amount REAL NOT NULL,
-      payment_method TEXT NOT NULL DEFAULT 'LYDIA',
+      payment_method TEXT NOT NULL DEFAULT 'WERO',
       settled_at TEXT NOT NULL,
       notes TEXT,
       created_at TEXT NOT NULL
@@ -88,7 +88,7 @@ function initSchema(sqlite: Database.Database) {
   `)
 
   try {
-    sqlite.exec(`ALTER TABLE group_orders ADD COLUMN shipping_split_method TEXT NOT NULL DEFAULT 'EQUITABLE';`)
+    sqlite.exec(`ALTER TABLE group_orders ADD COLUMN shipping_split_method TEXT NOT NULL DEFAULT 'EQUAL';`)
   } catch {
     // Column already exists
   }
@@ -103,6 +103,35 @@ function initSchema(sqlite: Database.Database) {
     sqlite.exec(`ALTER TABLE filament_demands ADD COLUMN is_paused INTEGER NOT NULL DEFAULT 0;`)
   } catch {
     // Column already exists
+  }
+
+  // Automatic data migration from legacy French enums to standard English enums
+  try {
+    sqlite.exec(`
+      UPDATE group_orders SET status = 'PENDING' WHERE status IN ('PREPARATION', 'EN_ATTENTE');
+      UPDATE group_orders SET status = 'ORDERED' WHERE status = 'COMMANDE';
+      UPDATE group_orders SET status = 'RECEIVED' WHERE status IN ('LIVRE', 'RECU');
+      UPDATE group_orders SET status = 'DISTRIBUTED' WHERE status IN ('CLOTURE', 'DISTRIBUE');
+
+      UPDATE group_orders SET shipping_split_method = 'EQUAL' WHERE shipping_split_method = 'EQUITABLE';
+      UPDATE group_orders SET shipping_split_method = 'PRO_RATA' WHERE shipping_split_method = 'PRORATA';
+
+      UPDATE filament_demands SET status = 'REQUESTED' WHERE status = 'DEMANDE';
+      UPDATE filament_demands SET status = 'ASSIGNED' WHERE status = 'PRIS_EN_CHARGE';
+      UPDATE filament_demands SET status = 'ORDERED' WHERE status = 'COMMANDE';
+      UPDATE filament_demands SET status = 'RECEIVED' WHERE status = 'RECU';
+      UPDATE filament_demands SET status = 'DISTRIBUTED' WHERE status = 'DISTRIBUE';
+      UPDATE filament_demands SET status = 'CANCELLED' WHERE status = 'ANNULE';
+
+      UPDATE filament_demands SET format = 'REFILL' WHERE format = 'RECHARGE';
+      UPDATE filament_demands SET format = 'SPOOL' WHERE format = 'BOBINE';
+
+      UPDATE settlements SET payment_method = 'TRANSFER' WHERE payment_method = 'VIREMENT';
+      UPDATE settlements SET payment_method = 'CASH' WHERE payment_method = 'ESPECES';
+      UPDATE settlements SET payment_method = 'OTHER' WHERE payment_method = 'AUTRE';
+    `)
+  } catch (err) {
+    console.error('Data migration warning:', err)
   }
 }
 
