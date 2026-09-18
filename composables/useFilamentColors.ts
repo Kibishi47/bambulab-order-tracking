@@ -153,3 +153,32 @@ export const PAYMENT_METHODS = [
   { value: 'ESPECES', label: 'Espèces' },
   { value: 'AUTRE', label: 'Autre' }
 ]
+
+export function resolveColorHex(colorName: string, existingHex?: string): string {
+  if (!colorName) return existingHex || '#71717a'
+  const trimmed = colorName.trim()
+  if (/^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/.test(trimmed)) {
+    return trimmed
+  }
+  const matchedPreset = BAMBU_COLOR_PALETTE.find(c => c.name.toLowerCase() === trimmed.toLowerCase())
+  if (matchedPreset) return matchedPreset.hex
+
+  const lower = trimmed.toLowerCase()
+  if (lower.includes('noir') || lower.includes('black')) return '#18181b'
+  if (lower.includes('blanc') || lower.includes('white')) return '#ffffff'
+  if (lower.includes('vert') || lower.includes('green') || lower.includes('bambu')) return '#00AE42'
+  if (lower.includes('rouge') || lower.includes('red')) return '#ef4444'
+  if (lower.includes('bleu') || lower.includes('blue')) return '#3b82f6'
+  if (lower.includes('gris') || lower.includes('grey') || lower.includes('gray')) return '#71717a'
+  if (lower.includes('jaune') || lower.includes('yellow')) return '#eab308'
+  if (lower.includes('orange')) return '#f97316'
+  if (lower.includes('violet') || lower.includes('purple')) return '#a855f7'
+  if (lower.includes('rose') || lower.includes('pink')) return '#ec4899'
+  if (lower.includes('cyan')) return '#06b6d4'
+  if (lower.includes('marron') || lower.includes('brown')) return '#78350f'
+  if (lower.includes('or') || lower.includes('gold')) return '#d4af37'
+  if (lower.includes('argent') || lower.includes('silver')) return '#a6b1b9'
+
+  return existingHex || '#71717a'
+}
+

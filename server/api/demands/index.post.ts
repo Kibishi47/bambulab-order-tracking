@@ -11,10 +11,11 @@ export default defineEventHandler(async (event) => {
   if (!body.filamentType || typeof body.filamentType !== 'string') {
     throw createError({ statusCode: 400, statusMessage: 'Le type de filament est requis' })
   }
-  if (!body.colorName || !body.colorHex) {
-    throw createError({ statusCode: 400, statusMessage: 'La couleur (nom et code hex) est requise' })
+  if (!body.colorName || typeof body.colorName !== 'string') {
+    throw createError({ statusCode: 400, statusMessage: 'La couleur est requise' })
   }
 
+  const colorHex = (body.colorHex && typeof body.colorHex === 'string') ? body.colorHex.trim() : '#71717a'
   const quantity = Math.max(1, parseInt(body.quantity) || 1)
   const estimatedUnitPrice = Math.max(0, parseFloat(body.estimatedUnitPrice) || 16.99)
   const format = body.format === 'BOBINE' ? 'BOBINE' : 'RECHARGE'
@@ -34,7 +35,7 @@ export default defineEventHandler(async (event) => {
     filamentType: body.filamentType.trim(),
     format,
     colorName: body.colorName.trim(),
-    colorHex: body.colorHex.trim(),
+    colorHex,
     quantity,
     estimatedUnitPrice,
     actualUnitPrice: null,

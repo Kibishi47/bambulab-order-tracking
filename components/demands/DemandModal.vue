@@ -1,13 +1,11 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { Plus, Check, Edit2 } from 'lucide-vue-next'
+import { Plus, Edit2 } from 'lucide-vue-next'
 import Modal from '~/components/Modal.vue'
 import {
   BAMBU_FILAMENT_TYPES,
-  BAMBU_COLOR_PALETTE,
   DEMAND_STATUSES,
-  type FilamentTypeConfig,
-  type FilamentPreset
+  resolveColorHex
 } from '~/composables/useFilamentColors'
 
 const props = defineProps<{
@@ -27,12 +25,9 @@ const loading = ref(false)
 const errorMessage = ref('')
 
 const memberId = ref<number | ''>('')
-const selectedType = ref<FilamentTypeConfig>(BAMBU_FILAMENT_TYPES[0])
+const filamentType = ref('PLA Basic')
 const format = ref<'RECHARGE' | 'BOBINE'>('RECHARGE')
-const selectedColor = ref<FilamentPreset>(BAMBU_COLOR_PALETTE[0])
-const customColorName = ref('')
-const customColorHex = ref('#00AE42')
-const useCustomColor = ref(false)
+const colorName = ref('Bambu Green')
 const quantity = ref(1)
 const estimatedUnitPrice = ref(16.99)
 const status = ref('DEMANDE')
@@ -44,65 +39,44 @@ watch(() => props.modelValue, (isOpen) => {
     if (props.demandToEdit) {
       // Pre-fill fields for edition
       memberId.value = props.demandToEdit.memberId
-      const foundType = BAMBU_FILAMENT_TYPES.find(t => t.name.toLowerCase() === props.demandToEdit.filamentType?.toLowerCase())
-      selectedType.value = foundType || {
-        name: props.demandToEdit.filamentType || 'Autre',
-        category: 'Personnalisé',
-        badgeClass: 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700',
-        defaultPrice: props.demandToEdit.estimatedUnitPrice || 16.99
-      }
+      filamentType.value = props.demandToEdit.filamentType || 'PLA Basic'
       format.value = props.demandToEdit.format === 'BOBINE' ? 'BOBINE' : 'RECHARGE'
+      colorName.value = props.demandToEdit.colorName || ''
       quantity.value = props.demandToEdit.quantity || 1
       estimatedUnitPrice.value = props.demandToEdit.estimatedUnitPrice || 16.99
       status.value = props.demandToEdit.status || 'DEMANDE'
       notes.value = props.demandToEdit.notes || ''
-
-      const foundColor = BAMBU_COLOR_PALETTE.find(c => c.name.toLowerCase() === props.demandToEdit.colorName?.toLowerCase())
-      if (foundColor) {
-        useCustomColor.value = false
-        selectedColor.value = foundColor
-      } else {
-        useCustomColor.value = true
-        customColorName.value = props.demandToEdit.colorName || ''
-        customColorHex.value = props.demandToEdit.colorHex || '#00AE42'
-      }
     } else {
       // Reset for creation
       if (!memberId.value && props.members.length > 0) {
         memberId.value = props.initialMemberId || props.members[0].id
       }
-      selectedType.value = BAMBU_FILAMENT_TYPES[0]
+      filamentType.value = 'PLA Basic'
       format.value = 'RECHARGE'
-      selectedColor.value = BAMBU_COLOR_PALETTE[0]
-      useCustomColor.value = false
-      customColorName.value = ''
-      customColorHex.value = '#00AE42'
+      colorName.value = 'Bambu Green'
       quantity.value = 1
+      estimatedUnitPrice.value = 16.99
       status.value = 'DEMANDE'
       notes.value = ''
-      updatePrice()
+      updateSuggestedPrice()
     }
   }
 })
 
-function selectType(t: FilamentTypeConfig) {
-  selectedType.value = t
-  if (!props.demandToEdit) {
-    updatePrice()
-  }
-}
-
-function updatePrice() {
-  let basePrice = selectedType.value.defaultPrice
+function updateSuggestedPrice() {
+  const match = BAMBU_FILAMENT_TYPES.find(t => t.name.toLowerCase() === filamentType.value.trim().toLowerCase())
+  let basePrice = match ? match.defaultPrice : 16.99
   if (format.value === 'BOBINE') {
     basePrice += 2.0
   }
   estimatedUnitPrice.value = Math.round(basePrice * 100) / 100
 }
 
-function selectPresetColor(c: FilamentPreset) {
-  useCustomColor.value = false
-  selectedColor.value = c
+function setFormat(newFormat: 'RECHARGE' | 'BOBINE') {
+  format.value = newFormat
+  if (!props.demandToEdit) {
+    updateSuggestedPrice()
+  }
 }
 
 async function submit() {
@@ -111,13 +85,19 @@ async function submit() {
     return
   }
 
-  const finalColorName = useCustomColor.value ? customColorName.value.trim() : selectedColor.value.name
-  const finalColorHex = useCustomColor.value ? customColorHex.value.trim() : selectedColor.value.hex
-
-  if (!finalColorName) {
-    errorMessage.value = 'Veuillez spécifier le nom de la couleur'
+  const trimmedType = filamentType.value.trim()
+  if (!trimmedType) {
+    errorMessage.value = 'Veuillez spécifier le type de filament'
     return
   }
+
+  const trimmedColor = colorName.value.trim()
+  if (!trimmedColor) {
+    errorMessage.value = 'Veuillez spécifier la couleur'
+    return
+  }
+
+  const finalColorHex = resolveColorHex(trimmedColor, props.demandToEdit?.colorHex)
 
   loading.value = true
   errorMessage.value = ''
@@ -129,9 +109,9 @@ async function submit() {
         method: 'PATCH',
         body: {
           memberId: memberId.value,
-          filamentType: selectedType.value.name,
+          filamentType: trimmedType,
           format: format.value,
-          colorName: finalColorName,
+          colorName: trimmedColor,
           colorHex: finalColorHex,
           quantity: quantity.value,
           estimatedUnitPrice: estimatedUnitPrice.value,
@@ -146,9 +126,9 @@ async function submit() {
         method: 'POST',
         body: {
           memberId: memberId.value,
-          filamentType: selectedType.value.name,
+          filamentType: trimmedType,
           format: format.value,
-          colorName: finalColorName,
+          colorName: trimmedColor,
           colorHex: finalColorHex,
           quantity: quantity.value,
           estimatedUnitPrice: estimatedUnitPrice.value,
@@ -217,25 +197,16 @@ async function submit() {
       <!-- Type de filament -->
       <div>
         <label class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider mb-1.5">
-          Matière / Type de filament *
+          Type de filament *
         </label>
-        <div class="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
-          <button
-            v-for="t in BAMBU_FILAMENT_TYPES"
-            :key="t.name"
-            type="button"
-            class="px-2.5 py-1.5 text-xs font-medium rounded-lg border text-left flex items-center justify-between transition-all"
-            :class="[
-              selectedType.name === t.name
-                ? 'bg-bambu-50 border-bambu-500 text-bambu-700 dark:bg-bambu-500/15 dark:border-bambu-500 dark:text-bambu-400 font-semibold'
-                : 'bg-zinc-50 border-zinc-200 text-zinc-700 hover:bg-zinc-100 dark:bg-zinc-900/60 dark:border-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-900'
-            ]"
-            @click="selectType(t)"
-          >
-            <span>{{ t.name }}</span>
-            <span class="text-[10px] opacity-70">{{ t.category }}</span>
-          </button>
-        </div>
+        <input
+          v-model="filamentType"
+          type="text"
+          required
+          placeholder="PLA Basic, PETG HF, TPU 95A..."
+          class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:border-bambu-500 transition-colors"
+          @input="!demandToEdit && updateSuggestedPrice()"
+        />
       </div>
 
       <!-- Format (Recharge vs Bobine complète) -->
@@ -252,7 +223,7 @@ async function submit() {
                 ? 'bg-bambu-50 border-bambu-500 text-zinc-900 dark:bg-bambu-500/10 dark:border-bambu-500 dark:text-white'
                 : 'bg-zinc-50 border-zinc-200 text-zinc-600 hover:bg-zinc-100 dark:bg-zinc-900/60 dark:border-zinc-800 dark:text-zinc-400'
             ]"
-            @click="format = 'RECHARGE'; updatePrice()"
+            @click="setFormat('RECHARGE')"
           >
             <div class="flex items-center justify-between">
               <span class="text-xs font-semibold">Recharge (Refill)</span>
@@ -269,7 +240,7 @@ async function submit() {
                 ? 'bg-bambu-50 border-bambu-500 text-zinc-900 dark:bg-bambu-500/10 dark:border-bambu-500 dark:text-white'
                 : 'bg-zinc-50 border-zinc-200 text-zinc-600 hover:bg-zinc-100 dark:bg-zinc-900/60 dark:border-zinc-800 dark:text-zinc-400'
             ]"
-            @click="format = 'BOBINE'; updatePrice()"
+            @click="setFormat('BOBINE')"
           >
             <div class="flex items-center justify-between">
               <span class="text-xs font-semibold">Avec bobine (Spool)</span>
@@ -280,71 +251,18 @@ async function submit() {
         </div>
       </div>
 
-      <!-- Choix de la couleur -->
+      <!-- Couleur -->
       <div>
-        <div class="flex items-center justify-between mb-1.5">
-          <label class="text-xs font-semibold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider">
-            Couleur de la bobine *
-          </label>
-          <button
-            type="button"
-            class="text-xs text-bambu-600 dark:text-bambu-400 hover:underline"
-            @click="useCustomColor = !useCustomColor"
-          >
-            {{ useCustomColor ? 'Palette standard Bambu' : 'Saisir une couleur personnalisée' }}
-          </button>
-        </div>
-
-        <!-- Palette Bambu Lab -->
-        <div v-if="!useCustomColor" class="flex flex-wrap gap-1.5">
-          <button
-            v-for="c in BAMBU_COLOR_PALETTE"
-            :key="c.name"
-            type="button"
-            class="flex items-center gap-1.5 px-2 py-1 rounded-lg border text-xs font-medium transition-all"
-            :class="[
-              selectedColor.name === c.name
-                ? 'bg-zinc-200 dark:bg-zinc-800 border-zinc-400 dark:border-zinc-600 text-zinc-900 dark:text-white font-semibold'
-                : 'bg-zinc-50 dark:bg-zinc-900/60 border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100'
-            ]"
-            @click="selectPresetColor(c)"
-          >
-            <span
-              class="w-3 h-3 rounded-full border border-zinc-300 dark:border-zinc-600"
-              :style="{ backgroundColor: c.hex }"
-            />
-            <span>{{ c.name }}</span>
-          </button>
-        </div>
-
-        <!-- Personnalisée -->
-        <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label class="block text-[11px] text-zinc-500 dark:text-zinc-400 mb-1">Nom de la teinte</label>
-            <input
-              v-model="customColorName"
-              type="text"
-              required
-              placeholder="Ex: Bleu Glacier, Rose Bonbon..."
-              class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-1.5 text-xs text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-bambu-500"
-            />
-          </div>
-          <div>
-            <label class="block text-[11px] text-zinc-500 dark:text-zinc-400 mb-1">Code Hexadécimal</label>
-            <div class="flex items-center gap-2">
-              <input
-                v-model="customColorHex"
-                type="color"
-                class="w-8 h-8 rounded border border-zinc-300 dark:border-zinc-700 bg-transparent cursor-pointer p-0"
-              />
-              <input
-                v-model="customColorHex"
-                type="text"
-                class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-1.5 text-xs font-mono text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-bambu-500"
-              />
-            </div>
-          </div>
-        </div>
+        <label class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider mb-1.5">
+          Couleur *
+        </label>
+        <input
+          v-model="colorName"
+          type="text"
+          required
+          placeholder="Bambu Green, Noir, Blanc Jade..."
+          class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:border-bambu-500 transition-colors"
+        />
       </div>
 
       <!-- Quantité & Prix unitaire estimé -->
