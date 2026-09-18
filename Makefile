@@ -31,3 +31,5 @@ seed\:full:
 
 seed\:clean:
 	npx tsx server/database/seeds/clean.ts
+test:error:
+	curl -s "http://localhost:3000/api/test-error?type=404" && echo "\nTest error endpoint available"
