@@ -170,7 +170,6 @@ async function submit() {
   } finally {
     loading.value = false
   }
-}  }
 }
 
 const confirmDeleteOpen = ref(false)
