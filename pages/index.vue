@@ -257,6 +257,14 @@ function getNextStatus(status: string) {
           <div class="min-w-0 space-y-1">
             <div class="flex items-center gap-2 flex-wrap">
               <span class="text-xs font-bold text-zinc-900 dark:text-white">{{ d.memberName }}</span>
+              <span
+                v-if="d.payerMemberName"
+                class="inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200/80 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/40 whitespace-nowrap"
+                :title="`Article offert et pris en charge par ${d.payerMemberName}`"
+              >
+                <span>🎁</span>
+                <span>Offert par <strong>{{ d.payerMemberName }}</strong></span>
+              </span>
               <span class="text-zinc-400 text-xs">•</span>
               <span class="text-xs font-semibold text-zinc-700 dark:text-zinc-300">{{ d.quantity }}x</span>
               <BadgeFilament

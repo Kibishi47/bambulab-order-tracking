@@ -287,6 +287,14 @@ function getNextStatus(status: string) {
           <div class="min-w-0 space-y-1.5">
             <div class="flex items-center gap-2 flex-wrap">
               <span class="text-sm font-bold text-zinc-900 dark:text-white truncate max-w-[150px] sm:max-w-none">{{ d.memberName }}</span>
+              <span
+                v-if="d.payerMemberName"
+                class="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200/80 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/40 whitespace-nowrap"
+                :title="`Article offert et pris en charge par ${d.payerMemberName}`"
+              >
+                <span>🎁</span>
+                <span>Offert par <strong>{{ d.payerMemberName }}</strong></span>
+              </span>
               <span class="text-zinc-300 dark:text-zinc-600">•</span>
               <span class="text-xs font-mono font-bold text-zinc-700 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded border border-zinc-200 dark:border-zinc-700 whitespace-nowrap">
                 {{ d.quantity }} bobine(s)

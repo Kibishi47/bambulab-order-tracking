@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { Plus, Edit2, Trash2 } from 'lucide-vue-next'
+import { Plus, Edit2, Trash2, Gift } from 'lucide-vue-next'
 import Modal from '~/components/Modal.vue'
 import ConfirmModal from '~/components/ui/ConfirmModal.vue'
 import {
@@ -14,19 +14,21 @@ const props = defineProps<{
   members: Array<{ id: number, name: string }>
   initialMemberId?: number
   demandToEdit?: any | null
-}>()
+}>>()
 
 const emit = defineEmits<{
   (e: 'update:modelValue', val: boolean): void
   (e: 'created'): void
   (e: 'updated'): void
   (e: 'deleted'): void
-}>()
+}>>()
 
 const loading = ref(false)
 const errorMessage = ref('')
 
 const memberId = ref<number | ''>('')
+const isSponsored = ref(false)
+const payerMemberId = ref<number | ''>('')
 const filamentType = ref('PLA Basic')
 const format = ref<'RECHARGE' | 'BOBINE'>('RECHARGE')
 const colorName = ref('Bambu Green')
@@ -41,6 +43,8 @@ watch(() => props.modelValue, (isOpen) => {
     if (props.demandToEdit) {
       // Pre-fill fields for edition
       memberId.value = props.demandToEdit.memberId
+      isSponsored.value = !!props.demandToEdit.payerMemberId
+      payerMemberId.value = props.demandToEdit.payerMemberId || ''
       filamentType.value = props.demandToEdit.filamentType || 'PLA Basic'
       format.value = props.demandToEdit.format === 'BOBINE' ? 'BOBINE' : 'RECHARGE'
       colorName.value = props.demandToEdit.colorName || ''
@@ -51,6 +55,8 @@ watch(() => props.modelValue, (isOpen) => {
     } else {
       // Reset for creation
       memberId.value = ''
+      isSponsored.value = false
+      payerMemberId.value = ''
       filamentType.value = 'PLA Basic'
       format.value = 'RECHARGE'
       colorName.value = 'Bambu Green'
@@ -60,6 +66,12 @@ watch(() => props.modelValue, (isOpen) => {
       notes.value = ''
       updateSuggestedPrice()
     }
+  }
+})
+
+watch(isSponsored, (val) => {
+  if (!val) {
+    payerMemberId.value = ''
   }
 })
 
@@ -85,6 +97,16 @@ async function submit() {
     return
   }
 
+  if (isSponsored.value && !payerMemberId.value) {
+    errorMessage.value = 'Veuillez sélectionner le membre qui prend en charge cet article'
+    return
+  }
+
+  if (isSponsored.value && payerMemberId.value === memberId.value) {
+    errorMessage.value = 'Le payeur doit être différent du membre demandeur'
+    return
+  }
+
   const trimmedType = filamentType.value.trim()
   if (!trimmedType) {
     errorMessage.value = 'Veuillez spécifier le type de filament'
@@ -103,12 +125,15 @@ async function submit() {
   errorMessage.value = ''
 
   try {
+    const finalPayerId = isSponsored.value && payerMemberId.value ? Number(payerMemberId.value) : null
+
     if (props.demandToEdit) {
       // Edit existing demand
       await $fetch(`/api/demands/${props.demandToEdit.id}`, {
         method: 'PATCH',
         body: {
           memberId: memberId.value,
+          payerMemberId: finalPayerId,
           filamentType: trimmedType,
           format: format.value,
           colorName: trimmedColor,
@@ -126,6 +151,7 @@ async function submit() {
         method: 'POST',
         body: {
           memberId: memberId.value,
+          payerMemberId: finalPayerId,
           filamentType: trimmedType,
           format: format.value,
           colorName: trimmedColor,
@@ -144,6 +170,7 @@ async function submit() {
   } finally {
     loading.value = false
   }
+}  }
 }
 
 const confirmDeleteOpen = ref(false)
@@ -215,6 +242,46 @@ async function executeDelete() {
               {{ s.label }}
             </option>
           </select>
+        </div>
+      </div>
+
+      <!-- Option Prise en charge / Cadeau -->
+      <div class="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 space-y-3">
+        <label class="flex items-center gap-2.5 cursor-pointer select-none">
+          <input
+            v-model="isSponsored"
+            type="checkbox"
+            class="w-4 h-4 rounded border-zinc-300 dark:border-zinc-700 text-bambu-600 focus:ring-bambu-500 transition-colors"
+          />
+          <div class="flex items-center gap-1.5 text-xs font-semibold text-zinc-800 dark:text-zinc-200">
+            <Gift class="w-3.5 h-3.5 text-amber-500" />
+            <span>Offrir / Prendre en charge pour ce membre</span>
+          </div>
+        </label>
+
+        <!-- Sélecteur du membre payeur si activé -->
+        <div v-if="isSponsored" class="pt-2.5 border-t border-zinc-200/70 dark:border-zinc-800/70 space-y-1.5">
+          <label class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider">
+            Payé par : *
+          </label>
+          <select
+            v-model="payerMemberId"
+            required
+            class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-bambu-500 transition-colors"
+          >
+            <option value="" disabled selected>Sélectionner un membre...</option>
+            <option
+              v-for="m in members"
+              :key="m.id"
+              :value="m.id"
+              :disabled="m.id === memberId"
+            >
+              {{ m.name }} {{ m.id === memberId ? '(destinataire)' : '' }}
+            </option>
+          </select>
+          <p class="text-[11px] text-zinc-500 dark:text-zinc-400">
+            Le coût de la bobine et sa quote-part de frais de port seront imputés à ce membre dans le calcul des soldes.
+          </p>
         </div>
       </div>
 
