@@ -1,0 +1,18 @@
+{
+  "$schema": "https://unpkg.com/knip@5/overview/schema.json",
+  "entry": [
+    "pages/**/*.vue",
+    "components/**/*.vue",
+    "composables/**/*.ts",
+    "server/**/*.ts",
+    "types/**/*.ts"
+  ],
+  "project": [
+    "**/*.{ts,vue}"
+  ],
+  "ignoreDependencies": [
+    "autoprefixer",
+    "postcss",
+    "vue-router"
+  ]
+}

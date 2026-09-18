@@ -1,4 +1,4 @@
-.PHONY: help dev db\:migrate db\:reset seed\:minimal seed\:pending seed\:full seed\:clean
+.PHONY: help dev db\:migrate db\:reset seed\:minimal seed\:pending seed\:full seed\:clean test\:error typecheck audit duplicates check
 
 help:
 	@echo "Commandes disponibles pour BambuShare :"
@@ -9,6 +9,10 @@ help:
 	@echo "  make seed:pending - Injecter des membres et des besoins en attente de regroupement"
 	@echo "  make seed:full    - Injecter le jeu d'essai complet (commandes équitable/prorata, soldes, virements)"
 	@echo "  make seed:clean   - Vider toutes les tables sans supprimer le fichier SQLite"
+	@echo "  make typecheck    - Vérifier les types TypeScript avec vue-tsc"
+	@echo "  make audit        - Auditer le code mort et les dépendances orphelines avec knip"
+	@echo "  make duplicates   - Analyser le code dupliqué avec jscpd"
+	@echo "  make check        - Exécuter la suite complète (typecheck + audit + duplicates)"
 
 dev:
 	npm run dev
@@ -31,5 +35,17 @@ seed\:full:
 
 seed\:clean:
 	npx tsx server/database/seeds/clean.ts
-test:error:
+test\:error:
 	curl -s "http://localhost:3000/api/test-error?type=404" && echo "\nTest error endpoint available"
+
+typecheck:
+	npm run typecheck
+
+audit:
+	npm run audit
+
+duplicates:
+	npm run duplicates
+
+check:
+	npm run check

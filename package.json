@@ -14,10 +14,13 @@
     "seed:minimal": "tsx server/database/seeds/minimal.ts",
     "seed:pending": "tsx server/database/seeds/pending.ts",
     "seed:full": "tsx server/database/seeds/full.ts",
-    "seed:clean": "tsx server/database/seeds/clean.ts"
+    "seed:clean": "tsx server/database/seeds/clean.ts",
+    "typecheck": "vue-tsc --noEmit",
+    "audit": "knip",
+    "duplicates": "jscpd server app.vue components pages composables types --threshold 5",
+    "check": "npm run typecheck && npm run audit && npm run duplicates"
   },
   "dependencies": {
-    "@lucide/vue": "^1.47.0",
     "better-sqlite3": "^13.0.3",
     "drizzle-orm": "^0.45.2",
     "lucide-vue-next": "^1.0.0",
@@ -30,8 +33,12 @@
     "@types/better-sqlite3": "^9.6.0",
     "autoprefixer": "^10.6.1",
     "drizzle-kit": "^0.31.10",
+    "jscpd": "^5.3.0",
+    "knip": "^6.37.0",
     "postcss": "^8.5.28",
     "tailwindcss": "^3.4.19",
-    "tsx": "^4.23.13"
+    "tsx": "^4.23.13",
+    "typescript": "^5.9.3",
+    "vue-tsc": "^3.3.11"
   }
 }

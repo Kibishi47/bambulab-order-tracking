@@ -1,6 +1,4 @@
-import { H3Event, getQuery, createError } from 'h3'
-
-export default defineEventHandler((event: H3Event) => {
+export default defineEventHandler((event) => {
   const type = getQuery(event).type as string | undefined
   if (type === '404') {
     // Throw 404 error
