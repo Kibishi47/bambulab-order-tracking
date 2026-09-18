@@ -1,5 +1,12 @@
 import { sqliteTable, text, integer, real } from 'drizzle-orm/sqlite-core'
-import { relations } from 'drizzle-orm'
+import { relations, type InferSelectModel, type InferInsertModel } from 'drizzle-orm'
+import {
+  ORDER_STATUS_VALUES,
+  SHIPPING_SPLIT_VALUES,
+  FILAMENT_FORMAT_VALUES,
+  NEED_STATUS_VALUES,
+  PAYMENT_METHOD_VALUES
+} from '../../types'
 
 export const members = sqliteTable('members', {
   id: integer('id').primaryKey({ autoIncrement: true }),
@@ -15,10 +22,10 @@ export const groupOrders = sqliteTable('group_orders', {
   orderNumber: text('order_number').notNull(),
   buyerId: integer('buyer_id').notNull().references(() => members.id, { onDelete: 'cascade' }),
   purchaseDate: text('purchase_date').notNull(),
-  status: text('status', { enum: ['PREPARATION', 'COMMANDE', 'LIVRE', 'CLOTURE'] }).notNull().default('PREPARATION'),
+  status: text('status', { enum: ORDER_STATUS_VALUES }).notNull().default('PREPARATION'),
   totalAmount: real('total_amount').notNull(),
   shippingFee: real('shipping_fee').notNull().default(0),
-  shippingSplitMethod: text('shipping_split_method', { enum: ['EQUITABLE', 'PRORATA'] }).notNull().default('EQUITABLE'),
+  shippingSplitMethod: text('shipping_split_method', { enum: SHIPPING_SPLIT_VALUES }).notNull().default('EQUITABLE'),
   notes: text('notes'),
   createdAt: text('created_at').notNull()
 })
@@ -29,13 +36,13 @@ export const filamentDemands = sqliteTable('filament_demands', {
   payerMemberId: integer('payer_member_id').references(() => members.id, { onDelete: 'set null' }),
   groupOrderId: integer('group_order_id').references(() => groupOrders.id, { onDelete: 'set null' }),
   filamentType: text('filament_type').notNull(),
-  format: text('format', { enum: ['RECHARGE', 'BOBINE'] }).notNull().default('RECHARGE'),
+  format: text('format', { enum: FILAMENT_FORMAT_VALUES }).notNull().default('RECHARGE'),
   colorName: text('color_name').notNull(),
   colorHex: text('color_hex').notNull(),
   quantity: integer('quantity').notNull().default(1),
   estimatedUnitPrice: real('estimated_unit_price').notNull().default(16.99),
   actualUnitPrice: real('actual_unit_price'),
-  status: text('status', { enum: ['DEMANDE', 'PRIS_EN_CHARGE', 'COMMANDE', 'RECU', 'DISTRIBUE', 'ANNULE'] }).notNull().default('DEMANDE'),
+  status: text('status', { enum: NEED_STATUS_VALUES }).notNull().default('DEMANDE'),
   isPaused: integer('is_paused', { mode: 'boolean' }).notNull().default(false),
   notes: text('notes'),
   createdAt: text('created_at').notNull(),
@@ -48,7 +55,7 @@ export const settlements = sqliteTable('settlements', {
   payerId: integer('payer_id').notNull().references(() => members.id, { onDelete: 'cascade' }),
   receiverId: integer('receiver_id').notNull().references(() => members.id, { onDelete: 'cascade' }),
   amount: real('amount').notNull(),
-  paymentMethod: text('payment_method', { enum: ['WERO', 'LYDIA', 'PAYPAL', 'VIREMENT', 'ESPECES', 'AUTRE'] }).notNull().default('WERO'),
+  paymentMethod: text('payment_method', { enum: PAYMENT_METHOD_VALUES }).notNull().default('WERO'),
   settledAt: text('settled_at').notNull(),
   notes: text('notes'),
   createdAt: text('created_at').notNull()
@@ -106,11 +113,21 @@ export const settlementsRelations = relations(settlements, ({ one }) => ({
   })
 }))
 
-export type Member = typeof members.$inferSelect
-export type NewMember = typeof members.$inferInsert
-export type GroupOrder = typeof groupOrders.$inferSelect
-export type NewGroupOrder = typeof groupOrders.$inferInsert
-export type FilamentDemand = typeof filamentDemands.$inferSelect
-export type NewFilamentDemand = typeof filamentDemands.$inferInsert
-export type Settlement = typeof settlements.$inferSelect
-export type NewSettlement = typeof settlements.$inferInsert
+// Types inférés Drizzle
+export type Member = InferSelectModel<typeof members>
+export type NewMember = InferInsertModel<typeof members>
+
+export type GroupOrder = InferSelectModel<typeof groupOrders>
+export type NewGroupOrder = InferInsertModel<typeof groupOrders>
+export type Order = GroupOrder
+export type NewOrder = NewGroupOrder
+
+export type FilamentDemand = InferSelectModel<typeof filamentDemands>
+export type NewFilamentDemand = InferInsertModel<typeof filamentDemands>
+export type Need = FilamentDemand
+export type NewNeed = NewFilamentDemand
+
+export type Settlement = InferSelectModel<typeof settlements>
+export type NewSettlement = InferInsertModel<typeof settlements>
+export type Payment = Settlement
+export type NewPayment = NewSettlement
