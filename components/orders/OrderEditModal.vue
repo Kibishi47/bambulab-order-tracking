@@ -196,7 +196,7 @@ async function executeDelete() {
       </div>
 
       <!-- Frais de port & Répartition -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 rounded-lg bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800/80">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 rounded-xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800/80">
         <div>
           <label class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider mb-1.5">
             Frais de port (€)
@@ -229,7 +229,7 @@ async function executeDelete() {
       </div>
 
       <!-- Remise par paliers Bambu Lab -->
-      <div class="p-3 rounded-lg bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800/80 space-y-2">
+      <div class="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800/80 space-y-2">
         <div class="flex items-center justify-between gap-3">
           <div class="flex items-center gap-1.5">
             <Percent class="w-3.5 h-3.5 text-bambu-500" />
