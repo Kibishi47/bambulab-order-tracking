@@ -1,6 +1,6 @@
 import { getDatabase } from '../database'
 import { members, groupOrders, filamentDemands, settlements } from '../database/schema'
-import { NeedStatus, OrderStatus, type BalancesResponseDTO } from '../../types'
+import { NeedStatus, OrderStatus, ShippingSplitMode, type BalancesResponseDTO } from '../../types'
 
 export interface MemberBalance {
   memberId: number
@@ -60,7 +60,7 @@ export default defineEventHandler(async (): Promise<BalancesResponseDTO> => {
     for (const [memberId, filamentCost] of orderParticipants.entries()) {
       let shippingShare = 0
       if (shipping > 0 && participantsCount > 0) {
-        if (o.shippingSplitMethod === 'PRORATA' && orderFilamentsTotal > 0) {
+        if (o.shippingSplitMethod === ShippingSplitMode.PRO_RATA && orderFilamentsTotal > 0) {
           shippingShare = (filamentCost / orderFilamentsTotal) * shipping
         } else {
           shippingShare = shipping / participantsCount
@@ -161,7 +161,7 @@ export default defineEventHandler(async (): Promise<BalancesResponseDTO> => {
   const totalOrdersAmount = allOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0)
   const totalSettled = allSettlements.reduce((sum, s) => sum + (s.amount || 0), 0)
   const pendingDemandsCount = allDemands.filter(d => d.status === NeedStatus.REQUESTED || d.status === NeedStatus.ASSIGNED).length
-  const activeOrdersCount = allOrders.filter(o => o.status !== OrderStatus.CLOSED).length
+  const activeOrdersCount = allOrders.filter(o => o.status !== OrderStatus.DISTRIBUTED).length
 
   return {
     membersBalances,

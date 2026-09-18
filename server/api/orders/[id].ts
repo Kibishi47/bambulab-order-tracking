@@ -2,6 +2,7 @@ import { getDatabase } from '../../database'
 import { groupOrders, members, filamentDemands, settlements } from '../../database/schema'
 import { eq } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/sqlite-core'
+import { NeedStatus, ShippingSplitMode } from '../../../types'
 
 export default defineEventHandler(async (event) => {
   const id = Number(getRouterParam(event, 'id'))
@@ -121,7 +122,7 @@ export default defineEventHandler(async (event) => {
     for (const item of memberBreakdownMap.values()) {
       let share = 0
       if (orderShipping > 0 && participantsCount > 0) {
-        if (order.shippingSplitMethod === 'PRORATA' && totalFilamentsValue > 0) {
+        if (order.shippingSplitMethod === ShippingSplitMode.PRO_RATA && totalFilamentsValue > 0) {
           share = (item.filamentCost / totalFilamentsValue) * orderShipping
         } else {
           share = orderShipping / participantsCount
@@ -150,7 +151,7 @@ export default defineEventHandler(async (event) => {
     if (body.status !== undefined) updateData.status = body.status
     if (body.totalAmount !== undefined) updateData.totalAmount = parseFloat(body.totalAmount)
     if (body.shippingFee !== undefined) updateData.shippingFee = parseFloat(body.shippingFee)
-    if (body.shippingSplitMethod !== undefined) updateData.shippingSplitMethod = body.shippingSplitMethod === 'PRORATA' ? 'PRORATA' : 'EQUITABLE'
+    if (body.shippingSplitMethod !== undefined) updateData.shippingSplitMethod = body.shippingSplitMethod === ShippingSplitMode.PRO_RATA ? ShippingSplitMode.PRO_RATA : ShippingSplitMode.EQUAL
     if (body.notes !== undefined) updateData.notes = body.notes
 
     const [updated] = await db.update(groupOrders)
@@ -169,7 +170,7 @@ export default defineEventHandler(async (event) => {
   if (method === 'DELETE') {
     // Unlink demands
     await db.update(filamentDemands)
-      .set({ groupOrderId: null, status: 'DEMANDE' })
+      .set({ groupOrderId: null, status: NeedStatus.REQUESTED })
       .where(eq(filamentDemands.groupOrderId, id))
       .run()
 

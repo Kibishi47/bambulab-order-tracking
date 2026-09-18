@@ -30,11 +30,11 @@ export default defineEventHandler(async (event) => {
   let requiredPreviousStatus: string
 
   if (action === 'RECEIVE') {
-    targetOrderStatus = OrderStatus.DELIVERED
+    targetOrderStatus = OrderStatus.RECEIVED
     targetDemandStatus = NeedStatus.RECEIVED
     requiredPreviousStatus = NeedStatus.ORDERED
   } else {
-    targetOrderStatus = OrderStatus.CLOSED
+    targetOrderStatus = OrderStatus.DISTRIBUTED
     targetDemandStatus = NeedStatus.DISTRIBUTED
     requiredPreviousStatus = NeedStatus.RECEIVED
   }
