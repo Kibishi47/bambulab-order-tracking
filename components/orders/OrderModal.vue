@@ -38,9 +38,7 @@ watch(() => props.modelValue, (isOpen) => {
   if (isOpen) {
     errorMessage.value = ''
     orderNumber.value = `FR${Math.floor(10000000 + Math.random() * 90000000)}`
-    if (!buyerId.value && props.members.length > 0) {
-      buyerId.value = props.members[0].id
-    }
+    buyerId.value = ''
     selectedDemandIds.value = props.pendingDemands.map(d => d.id)
     autoCalculateTotal()
   }
@@ -65,12 +63,12 @@ function toggleSelectAll() {
 }
 
 async function submit() {
-  if (!orderNumber.value.trim()) {
-    errorMessage.value = 'Le numéro de commande Bambu Lab est requis'
+  if (!buyerId.value) {
+    errorMessage.value = 'Veuillez sélectionner un membre'
     return
   }
-  if (!buyerId.value) {
-    errorMessage.value = "Veuillez désigner l'acheteur qui avance les fonds"
+  if (!orderNumber.value.trim()) {
+    errorMessage.value = 'Le numéro de commande Bambu Lab est requis'
     return
   }
   if (totalAmount.value === '' || Number(totalAmount.value) <= 0) {
@@ -166,7 +164,7 @@ async function submit() {
               required
               class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg pl-9 pr-3 py-2 text-xs text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-bambu-500"
             >
-              <option value="" disabled>Choisir l'acheteur</option>
+              <option value="" disabled selected>Sélectionner un membre...</option>
               <option v-for="m in members" :key="m.id" :value="m.id">
                 {{ m.name }}
               </option>

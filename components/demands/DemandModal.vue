@@ -48,9 +48,7 @@ watch(() => props.modelValue, (isOpen) => {
       notes.value = props.demandToEdit.notes || ''
     } else {
       // Reset for creation
-      if (!memberId.value && props.members.length > 0) {
-        memberId.value = props.initialMemberId || props.members[0].id
-      }
+      memberId.value = ''
       filamentType.value = 'PLA Basic'
       format.value = 'RECHARGE'
       colorName.value = 'Bambu Green'
@@ -171,7 +169,7 @@ async function submit() {
             required
             class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-bambu-500 transition-colors"
           >
-            <option value="" disabled>Sélectionnez un membre</option>
+            <option value="" disabled selected>Sélectionner un membre...</option>
             <option v-for="m in members" :key="m.id" :value="m.id">
               {{ m.name }}
             </option>

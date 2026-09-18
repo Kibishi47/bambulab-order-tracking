@@ -29,10 +29,9 @@ const errorMessage = ref('')
 watch(() => props.modelValue, (isOpen) => {
   if (isOpen) {
     errorMessage.value = ''
-    settledAt.value = new Date().toISOString().slice(0, 10)
-    if (props.prefillPayerId) payerId.value = props.prefillPayerId
-    if (props.prefillReceiverId) receiverId.value = props.prefillReceiverId
-    if (props.prefillAmount) amount.value = props.prefillAmount
+    payerId.value = props.prefillPayerId || ''
+    receiverId.value = props.prefillReceiverId || ''
+    amount.value = props.prefillAmount || ''
   }
 })
 
@@ -102,7 +101,7 @@ async function submit() {
             required
             class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-bambu-500"
           >
-            <option value="" disabled>Sélectionner le payeur</option>
+            <option value="" disabled selected>Sélectionner un membre...</option>
             <option v-for="m in members" :key="m.id" :value="m.id">
               {{ m.name }}
             </option>
@@ -118,7 +117,7 @@ async function submit() {
             required
             class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-bambu-500"
           >
-            <option value="" disabled>Sélectionner le bénéficiaire</option>
+            <option value="" disabled selected>Sélectionner un membre...</option>
             <option v-for="m in members" :key="m.id" :value="m.id">
               {{ m.name }}
             </option>
