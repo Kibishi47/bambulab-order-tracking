@@ -59,6 +59,7 @@ L'application permet à un groupe d'amis d'optimiser leurs commandes de filament
 | `status` | TEXT | NOT NULL | `PREPARATION`, `COMMANDE`, `LIVRE`, `CLOTURE` |
 | `total_amount` | REAL | NOT NULL | Montant réel payé sur le store (€) |
 | `shipping_fee` | REAL | NOT NULL DEFAULT 0 | Frais de port réels (€) |
+| `shipping_split_method` | TEXT | NOT NULL DEFAULT 'EQUITABLE' | Mode de répartition des frais : `EQUITABLE` ou `PRORATA` |
 | `notes` | TEXT | NULLABLE | Suivi colis, transporteur, etc. |
 | `created_at` | TEXT | NOT NULL | Timestamp ISO |
 
@@ -88,7 +89,7 @@ L'application permet à un groupe d'amis d'optimiser leurs commandes de filament
 | `payer_id` | INTEGER | FK `members.id` (CASCADE) | Membre qui rembourse (débiteur) |
 | `receiver_id` | INTEGER | FK `members.id` (CASCADE) | Membre qui reçoit (créancier) |
 | `amount` | REAL | NOT NULL | Montant remboursé (€) |
-| `payment_method` | TEXT | NOT NULL | `LYDIA`, `PAYPAL`, `VIREMENT`, `ESPECES`, `AUTRE` |
+| `payment_method` | TEXT | NOT NULL DEFAULT 'WERO' | `WERO`, `VIREMENT`, `PAYPAL`, `ESPECES`, `LYDIA`, `AUTRE` |
 | `settled_at` | TEXT | NOT NULL | Date de la transaction (YYYY-MM-DD) |
 | `notes` | TEXT | NULLABLE | Notes ou libellé de virement |
 | `created_at` | TEXT | NOT NULL | Timestamp ISO |
@@ -106,7 +107,7 @@ $$
 $$
 
 - $\text{Avancé}_M$ : somme des `total_amount` des commandes où $M$ est `buyer_id`.
-- $\text{Consommé}_M$ : somme de $(\text{quantité} \times \text{prix})$ des besoins de $M$ passés dans une commande (`COMMANDE`, `RECU`, `DISTRIBUE`).
+- $\text{Consommé}_M$ : somme du coût des bobines de $M$ passées dans une commande + quote-part des frais de port (`EQUITABLE` : frais divisés par nombre de participants ; `PRORATA` : frais au prorata de la valeur de filaments du membre).
 - $\text{Remb. Versés}_M$ : somme des virements où $M$ est `payer_id`.
 - $\text{Remb. Reçus}_M$ : somme des virements où $M$ est `receiver_id`.
 
