@@ -67,7 +67,8 @@ L'application permet à un groupe d'amis d'optimiser leurs commandes de filament
 | Champ | Type | Contraintes | Description |
 |---|---|---|---|
 | `id` | INTEGER | PRIMARY KEY AUTOINCREMENT | Identifiant unique |
-| `member_id` | INTEGER | FK `members.id` (CASCADE) | Membre demandeur |
+| `member_id` | INTEGER | FK `members.id` (CASCADE) | Membre demandeur (destinataire) |
+| `payer_member_id` | INTEGER | NULLABLE, FK `members.id` (SET NULL) | Membre qui prend en charge financièrement (si NULL : `member_id`) |
 | `group_order_id` | INTEGER | FK `group_orders.id` (SET NULL) | Commande groupée associée |
 | `filament_type` | TEXT | NOT NULL | PLA Basic, PLA Matte, PETG HF, TPU 95A, etc. |
 | `format` | TEXT | NOT NULL | `RECHARGE` (refill) ou `BOBINE` (spool) |
@@ -100,6 +101,14 @@ L'application permet à un groupe d'amis d'optimiser leurs commandes de filament
 
 L'ensemble des calculs réside dans le handler Nitro `server/api/balances.get.ts` :
 
+### Règle d'Imputation des Dépenses & Cadeaux
+Pour chaque besoin de filament dans une commande :
+- **Payeur effectif** : `debtorId = payer_member_id || member_id`.
+- Si un article est offert ou pris en charge (`payer_member_id` non nul), la charge financière de la bobine et de ses frais de port associés est imputée au payeur désigné. Le destinataire réel (`member_id`) voit son solde net impacté de 0 € pour cette ligne.
+- **Répartition des frais de port** :
+  - **Pro rata** : La valeur de l'article offert est comptabilisée dans l'assiette du payeur effectif.
+  - **Équitable (parts égales)** : Tout membre payeur (y compris s'il ne commande rien pour lui-même mais paie pour un ami) compte comme participant payeur à part entière dans la division des frais.
+
 ### Formule du Solde Net Individuel
 Pour chaque membre $M$ :
 $$
@@ -107,7 +116,7 @@ $$
 $$
 
 - $\text{Avancé}_M$ : somme des `total_amount` des commandes où $M$ est `buyer_id`.
-- $\text{Consommé}_M$ : somme du coût des bobines de $M$ passées dans une commande + quote-part des frais de port (`EQUITABLE` : frais divisés par nombre de participants ; `PRORATA` : frais au prorata de la valeur de filaments du membre).
+- $\text{Consommé}_M$ : somme du coût des bobines où $M$ est payeur effectif passées dans une commande + quote-part des frais de port (`EQUITABLE` : frais divisés par nombre de participants payeurs ; `PRORATA` : frais au prorata de la valeur des filaments pris en charge par le membre).
 - $\text{Remb. Versés}_M$ : somme des virements où $M$ est `payer_id`.
 - $\text{Remb. Reçus}_M$ : somme des virements où $M$ est `receiver_id`.
 

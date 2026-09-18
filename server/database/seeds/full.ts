@@ -115,6 +115,7 @@ export function seedFull() {
     },
     {
       memberId: lucas.id,
+      payerMemberId: alexandre.id,
       groupOrderId: order1.id,
       filamentType: 'PETG HF',
       format: 'RECHARGE',
@@ -124,7 +125,7 @@ export function seedFull() {
       estimatedUnitPrice: 16.99,
       actualUnitPrice: 15.99,
       status: 'RECU',
-      notes: 'Fixations murales',
+      notes: 'Fixations murales (Offert par Alexandre pour rendre une bobine prêtée)',
       createdAt: now,
       updatedAt: now
     },
@@ -132,6 +133,7 @@ export function seedFull() {
     // Dans Commande 2 (Statut COMMANDE)
     {
       memberId: sophie.id,
+      payerMemberId: null,
       groupOrderId: order2.id,
       filamentType: 'PLA Silk',
       format: 'RECHARGE',
@@ -147,6 +149,7 @@ export function seedFull() {
     },
     {
       memberId: lucas.id,
+      payerMemberId: null,
       groupOrderId: order2.id,
       filamentType: 'PETG-CF',
       format: 'BOBINE',
@@ -162,6 +165,7 @@ export function seedFull() {
     },
     {
       memberId: camille.id,
+      payerMemberId: null,
       groupOrderId: order2.id,
       filamentType: 'TPU 95A',
       format: 'BOBINE',
@@ -179,6 +183,7 @@ export function seedFull() {
     // Besoins non commandés (Statut DEMANDE, groupOrderId = null)
     {
       memberId: alexandre.id,
+      payerMemberId: null,
       groupOrderId: null,
       filamentType: 'PLA Galaxy',
       format: 'RECHARGE',
@@ -194,6 +199,7 @@ export function seedFull() {
     },
     {
       memberId: camille.id,
+      payerMemberId: sophie.id,
       groupOrderId: null,
       filamentType: 'Support Filament',
       format: 'BOBINE',
@@ -203,7 +209,7 @@ export function seedFull() {
       estimatedUnitPrice: 29.99,
       actualUnitPrice: null,
       status: 'DEMANDE',
-      notes: 'Support soluble à l\'eau pour impression complexe',
+      notes: 'Support soluble soluble (Cadeau offert par Sophie pour le projet associatif)',
       createdAt: now,
       updatedAt: now
     }
@@ -211,15 +217,15 @@ export function seedFull() {
 
   // 5. Règlements de remboursement (Wero et virement)
   db.insert(settlements).values([
-    // Lucas rembourse 20.00 € à Thomas via WERO pour la commande 1
+    // Alexandre rembourse 17.99 € à Thomas via WERO pour la bobine offerte à Lucas dans la commande 1
     {
       groupOrderId: order1.id,
-      payerId: lucas.id,
+      payerId: alexandre.id,
       receiverId: thomas.id,
       amount: 17.99,
       paymentMethod: 'WERO',
       settledAt: '2026-09-12',
-      notes: 'Remboursement solde commande #FR24098112 via Wero',
+      notes: 'Remboursement de la bobine PETG HF offerte à Lucas (#FR24098112) via Wero',
       createdAt: now
     },
     // Camille verse un acompte de 20.00 € à Sophie par virement bancaire pour la commande 2
