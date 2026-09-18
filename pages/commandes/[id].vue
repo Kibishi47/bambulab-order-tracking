@@ -17,18 +17,25 @@ import {
   CheckCheck,
   Edit2
 } from 'lucide-vue-next'
+import {
+  OrderStatus,
+  type CascadeAction,
+  type FilamentDemandDTO,
+  type GroupOrderDTO,
+  type MemberDTO
+} from '~/types'
 
 const route = useRoute()
 const router = useRouter()
 const triggerRefresh = inject<() => void>('triggerRefresh')
 
 const orderId = Number(route.params.id)
-const order = ref<any>(null)
+const order = ref<GroupOrderDTO | null>(null)
 const loading = ref(true)
 const updatingStatus = ref(false)
 const cascadeLoading = ref(false)
 const cascadeModalOpen = ref(false)
-const cascadeAction = ref<'RECEIVE' | 'DISTRIBUTE'>('RECEIVE')
+const cascadeAction = ref<CascadeAction>('RECEIVE')
 const orderEditModalOpen = ref(false)
 
 // Settlement modal
@@ -36,17 +43,17 @@ const settlementModalOpen = ref(false)
 const prefillPayer = ref<number>()
 const prefillReceiver = ref<number>()
 const prefillAmount = ref<number>()
-const members = ref<any[]>([])
+const members = ref<MemberDTO[]>([])
 
 async function loadOrder() {
   loading.value = true
   try {
     const [o, m] = await Promise.all([
-      $fetch(`/api/orders/${orderId}`),
-      $fetch('/api/members')
+      $fetch<GroupOrderDTO>(`/api/orders/${orderId}`),
+      $fetch<MemberDTO[]>('/api/members')
     ])
     order.value = o
-    members.value = m as any[]
+    members.value = m
   } catch (e) {
     console.error('Error loading order', e)
     router.push('/commandes')
@@ -56,7 +63,7 @@ async function loadOrder() {
 }
 
 const totalOrderSpools = computed(() => {
-  return order.value?.demands?.reduce((sum: number, d: any) => sum + d.quantity, 0) || 0
+  return order.value?.demands?.reduce((sum: number, d: FilamentDemandDTO) => sum + d.quantity, 0) || 0
 })
 
 onMounted(() => {
@@ -124,7 +131,7 @@ function openSettleForMember(memberId: number, amount: number) {
       <div class="flex items-center gap-2 flex-wrap">
         <!-- Action rapide : Marquer comme reçue (cascade avec modal explicatif) -->
         <button
-          v-if="order && order.status !== 'LIVRE' && order.status !== 'CLOTURE'"
+          v-if="order && order.status !== OrderStatus.RECEIVED && order.status !== OrderStatus.DISTRIBUTED"
           type="button"
           class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-semibold shadow-sm active:scale-95 transition-all"
           @click="promptCascade('RECEIVE')"
@@ -135,7 +142,7 @@ function openSettleForMember(memberId: number, amount: number) {
 
         <!-- Action rapide : Marquer comme distribuée (cascade avec modal explicatif) -->
         <button
-          v-if="order && order.status === 'LIVRE'"
+          v-if="order && order.status === OrderStatus.RECEIVED"
           type="button"
           class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-sm active:scale-95 transition-all"
           @click="promptCascade('DISTRIBUTE')"

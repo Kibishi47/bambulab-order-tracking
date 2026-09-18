@@ -4,11 +4,12 @@ import Modal from '~/components/Modal.vue'
 import ConfirmModal from '~/components/ui/ConfirmModal.vue'
 import DatePicker from '~/components/DatePicker.vue'
 import { ORDER_STATUSES } from '~/composables/useFilamentColors'
+import { OrderStatus, ShippingSplitMode, type GroupOrderDTO } from '~/types'
 import { Edit2, Trash2, Calendar, Hash, User, Euro, Truck } from 'lucide-vue-next'
 
 const props = defineProps<{
   modelValue: boolean
-  order: any
+  order: GroupOrderDTO | null
   members: Array<{ id: number, name: string }>
 }>()
 
@@ -21,10 +22,10 @@ const emit = defineEmits<{
 const orderNumber = ref('')
 const buyerId = ref<number | ''>('')
 const purchaseDate = ref('')
-const status = ref('COMMANDE')
+const status = ref<OrderStatus>(OrderStatus.ORDERED)
 const totalAmount = ref<number | ''>('')
 const shippingFee = ref<number | ''>(0)
-const shippingSplitMethod = ref<'EQUITABLE' | 'PRORATA'>('EQUITABLE')
+const shippingSplitMethod = ref<ShippingSplitMode>(ShippingSplitMode.EQUAL)
 const notes = ref('')
 
 const loading = ref(false)
@@ -37,10 +38,10 @@ watch(() => props.modelValue, (isOpen) => {
     orderNumber.value = props.order.orderNumber || ''
     buyerId.value = props.order.buyerId || ''
     purchaseDate.value = props.order.purchaseDate || new Date().toISOString().slice(0, 10)
-    status.value = props.order.status || 'COMMANDE'
+    status.value = props.order.status || OrderStatus.ORDERED
     totalAmount.value = props.order.totalAmount !== undefined ? props.order.totalAmount : ''
     shippingFee.value = props.order.shippingFee !== undefined ? props.order.shippingFee : 0
-    shippingSplitMethod.value = props.order.shippingSplitMethod === 'PRORATA' ? 'PRORATA' : 'EQUITABLE'
+    shippingSplitMethod.value = props.order.shippingSplitMethod === ShippingSplitMode.PRO_RATA ? ShippingSplitMode.PRO_RATA : ShippingSplitMode.EQUAL
     notes.value = props.order.notes || ''
   }
 })
@@ -213,8 +214,8 @@ async function executeDelete() {
             v-model="shippingSplitMethod"
             class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 text-xs font-semibold text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-bambu-500"
           >
-            <option value="EQUITABLE">Équitable (parts égales)</option>
-            <option value="PRORATA">Au pro rata de la valeur</option>
+            <option :value="ShippingSplitMode.EQUAL">Équitable (parts égales)</option>
+            <option :value="ShippingSplitMode.PRO_RATA">Au pro rata de la valeur</option>
           </select>
         </div>
       </div>

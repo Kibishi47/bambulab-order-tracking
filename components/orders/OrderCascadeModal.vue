@@ -4,11 +4,12 @@ import ConfirmModal from '~/components/ui/ConfirmModal.vue'
 import BadgeFilament from '~/components/BadgeFilament.vue'
 import StatusBadge from '~/components/StatusBadge.vue'
 import { Truck, CheckCheck, AlertCircle, ArrowRight } from 'lucide-vue-next'
+import { NeedStatus, type GroupOrderDTO, type CascadeAction, type FilamentDemandDTO } from '~/types'
 
 const props = defineProps<{
   modelValue: boolean
-  order: any
-  action: 'RECEIVE' | 'DISTRIBUTE'
+  order: GroupOrderDTO
+  action: CascadeAction
   loading?: boolean
 }>()
 
@@ -19,11 +20,11 @@ const emit = defineEmits<{
 
 const isReceive = computed(() => props.action === 'RECEIVE')
 
-const requiredPreviousStatus = computed(() => isReceive.value ? 'COMMANDE' : 'RECU')
-const targetDemandStatus = computed(() => isReceive.value ? 'RECU' : 'DISTRIBUE')
+const requiredPreviousStatus = computed<NeedStatus>(() => isReceive.value ? NeedStatus.ORDERED : NeedStatus.RECEIVED)
+const targetDemandStatus = computed<NeedStatus>(() => isReceive.value ? NeedStatus.RECEIVED : NeedStatus.DISTRIBUTED)
 const targetOrderStatusLabel = computed(() => isReceive.value ? 'Livrée' : 'Clôturée')
 
-const demands = computed<any[]>(() => props.order?.demands || [])
+const demands = computed<FilamentDemandDTO[]>(() => props.order?.demands || [])
 
 // Eligible demands that will transition
 const eligibleDemands = computed(() => {

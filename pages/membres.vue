@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, inject, type Ref } from 'vue'
+import { ref, onMounted, inject, type Ref, watch } from 'vue'
 import MemberModal from '~/components/members/MemberModal.vue'
 import {
   Users,
@@ -12,27 +12,28 @@ import {
   Layers,
   ShoppingBag
 } from 'lucide-vue-next'
+import type { BalancesResponseDTO, MemberDTO, MemberWithStatsDTO } from '~/types'
 
 const triggerRefresh = inject<() => void>('triggerRefresh')
 const refreshKey = inject<Ref<number>>('refreshKey', ref(0))
 
-const members = ref<any[]>([])
-const balances = ref<any[]>([])
+const members = ref<MemberWithStatsDTO[]>([])
+const balances = ref<BalancesResponseDTO['membersBalances']>([])
 const loading = ref(true)
 
 // Modal state
 const memberModalOpen = ref(false)
-const memberToEdit = ref<any>(null)
+const memberToEdit = ref<MemberDTO | null>(null)
 
 async function loadMembers() {
   loading.value = true
   try {
     const [m, b] = await Promise.all([
-      $fetch('/api/members'),
-      $fetch('/api/balances')
+      $fetch<MemberWithStatsDTO[]>('/api/members'),
+      $fetch<BalancesResponseDTO>('/api/balances')
     ])
-    members.value = m as any[]
-    balances.value = (b as any).membersBalances || []
+    members.value = m
+    balances.value = b.membersBalances || []
   } catch (e) {
     console.error('Error loading members', e)
   } finally {
@@ -53,7 +54,7 @@ function openCreateModal() {
   memberModalOpen.value = true
 }
 
-function openEditModal(m: any) {
+function openEditModal(m: MemberDTO) {
   memberToEdit.value = m
   memberModalOpen.value = true
 }

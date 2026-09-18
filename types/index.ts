@@ -82,6 +82,12 @@ export interface MemberDTO {
   createdAt: string
 }
 
+export interface MemberWithStatsDTO extends MemberDTO {
+  demandsCount: number
+  pendingDemandsCount: number
+  ordersBoughtCount: number
+}
+
 export interface FilamentDemandDTO {
   id: number
   memberId: number
@@ -151,29 +157,41 @@ export interface GroupOrderDTO {
   breakdown?: MemberOrderCostBreakdown[]
 }
 
-export interface DebtTransferDTO {
-  fromId: number
-  fromName: string
-  toId: number
-  toName: string
-  amount: number
-}
-
 export interface MemberBalanceDTO {
   memberId: number
   memberName: string
-  paidTotal: number
-  consumedTotal: number
+  memberEmail: string | null
+  memberPhone: string | null
+  dropoffLocation: string | null
+  totalAdvanced: number
+  totalConsumed: number
   settlementsPaid: number
   settlementsReceived: number
   netBalance: number
+  status: 'CREDITOR' | 'DEBTOR' | 'BALANCED'
+}
+
+export interface SimplifiedDebtDTO {
+  fromMemberId: number
+  fromMemberName: string
+  toMemberId: number
+  toMemberName: string
+  amount: number
+}
+
+export interface BalancesSummaryDTO {
+  totalOrdersAmount: number
+  totalSettled: number
+  pendingDemandsCount: number
+  activeOrdersCount: number
+  totalMembers: number
+  totalDebtsCount: number
 }
 
 export interface BalancesResponseDTO {
   membersBalances: MemberBalanceDTO[]
-  suggestedTransfers: DebtTransferDTO[]
-  totalGroupSpending: number
-  totalPendingDemandsCost: number
+  simplifiedDebts: SimplifiedDebtDTO[]
+  summary: BalancesSummaryDTO
 }
 
 export type CascadeAction = 'RECEIVE' | 'DISTRIBUTE'

@@ -3,16 +3,11 @@ import { ref, watch } from 'vue'
 import Modal from '~/components/Modal.vue'
 import ConfirmModal from '~/components/ui/ConfirmModal.vue'
 import { User, Mail, Phone, MapPin, Check, Trash2 } from 'lucide-vue-next'
+import type { MemberDTO } from '~/types'
 
 const props = defineProps<{
   modelValue: boolean
-  memberToEdit?: {
-    id: number
-    name: string
-    email?: string | null
-    phone?: string | null
-    dropoffLocation?: string | null
-  } | null
+  memberToEdit?: MemberDTO | null
 }>()
 
 const emit = defineEmits<{

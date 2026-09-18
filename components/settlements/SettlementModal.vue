@@ -4,6 +4,7 @@ import Modal from '~/components/Modal.vue'
 import ConfirmModal from '~/components/ui/ConfirmModal.vue'
 import DatePicker from '~/components/DatePicker.vue'
 import { PAYMENT_METHODS } from '~/composables/useFilamentColors'
+import { PaymentMethod, type SettlementDTO } from '~/types'
 import { ArrowRight, Check, Calendar, Euro, Trash2, Edit2 } from 'lucide-vue-next'
 
 const props = defineProps<{
@@ -12,15 +13,7 @@ const props = defineProps<{
   prefillPayerId?: number
   prefillReceiverId?: number
   prefillAmount?: number
-  settlementToEdit?: {
-    id: number
-    payerId: number
-    receiverId: number
-    amount: number
-    paymentMethod: string
-    settledAt: string
-    notes?: string | null
-  } | null
+  settlementToEdit?: SettlementDTO | null
 }>()
 
 const emit = defineEmits<{
@@ -33,7 +26,7 @@ const emit = defineEmits<{
 const payerId = ref<number | ''>('')
 const receiverId = ref<number | ''>('')
 const amount = ref<number | ''>('')
-const paymentMethod = ref('WERO')
+const paymentMethod = ref<PaymentMethod>(PaymentMethod.WERO)
 const settledAt = ref(new Date().toISOString().slice(0, 10))
 const notes = ref('')
 const loading = ref(false)
@@ -43,17 +36,17 @@ watch(() => props.modelValue, (isOpen) => {
   if (isOpen) {
     errorMessage.value = ''
     if (props.settlementToEdit) {
-      payerId.value = props.settlementToEdit.payerId || ''
-      receiverId.value = props.settlementToEdit.receiverId || ''
-      amount.value = props.settlementToEdit.amount || ''
-      paymentMethod.value = props.settlementToEdit.paymentMethod || 'WERO'
-      settledAt.value = props.settlementToEdit.settledAt || new Date().toISOString().slice(0, 10)
+      payerId.value = props.settlementToEdit.payerId
+      receiverId.value = props.settlementToEdit.receiverId
+      amount.value = props.settlementToEdit.amount
+      paymentMethod.value = props.settlementToEdit.paymentMethod || PaymentMethod.WERO
+      settledAt.value = props.settlementToEdit.settledAt
       notes.value = props.settlementToEdit.notes || ''
     } else {
       payerId.value = props.prefillPayerId || ''
       receiverId.value = props.prefillReceiverId || ''
-      amount.value = props.prefillAmount || ''
-      paymentMethod.value = 'WERO'
+      amount.value = props.prefillAmount !== undefined ? props.prefillAmount : ''
+      paymentMethod.value = PaymentMethod.WERO
       settledAt.value = new Date().toISOString().slice(0, 10)
       notes.value = ''
     }

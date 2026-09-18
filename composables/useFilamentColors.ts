@@ -3,6 +3,9 @@ export interface FilamentPreset {
   hex: string
 }
 
+import { CheckCircle, ShoppingBag, Truck, PackageCheck } from 'lucide-vue-next'
+import { NeedStatus, OrderStatus, PaymentMethod } from '../types'
+
 export interface FilamentTypeConfig {
   name: string
   category: string
@@ -92,68 +95,68 @@ export const BAMBU_COLOR_PALETTE: FilamentPreset[] = [
 
 export const DEMAND_STATUSES = [
   {
-    value: 'DEMANDE',
+    value: NeedStatus.REQUESTED,
     label: 'En attente',
     color: 'bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-500/15 dark:text-amber-400 dark:border-amber-500/30'
   },
   {
-    value: 'PRIS_EN_CHARGE',
+    value: NeedStatus.ASSIGNED,
     label: 'Pris en charge',
     color: 'bg-blue-50 text-blue-800 border-blue-200 dark:bg-blue-500/15 dark:text-blue-400 dark:border-blue-500/30'
   },
   {
-    value: 'COMMANDE',
+    value: NeedStatus.ORDERED,
     label: 'Commandé',
     color: 'bg-purple-50 text-purple-800 border-purple-200 dark:bg-purple-500/15 dark:text-purple-400 dark:border-purple-500/30'
   },
   {
-    value: 'RECU',
+    value: NeedStatus.RECEIVED,
     label: 'Reçu',
     color: 'bg-cyan-50 text-cyan-800 border-cyan-200 dark:bg-cyan-500/15 dark:text-cyan-400 dark:border-cyan-500/30'
   },
   {
-    value: 'DISTRIBUE',
+    value: NeedStatus.DISTRIBUTED,
     label: 'Distribué',
     color: 'bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-400 dark:border-emerald-500/30'
   },
   {
-    value: 'ANNULE',
+    value: NeedStatus.CANCELLED,
     label: 'Annulé',
     color: 'bg-zinc-100 text-zinc-500 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-500 dark:border-zinc-700'
   }
-]
+] as const
 
 export const ORDER_STATUSES = [
   {
-    value: 'PREPARATION',
+    value: OrderStatus.PENDING,
     label: 'En préparation',
     color: 'bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-500/15 dark:text-amber-400 dark:border-amber-500/30'
   },
   {
-    value: 'COMMANDE',
+    value: OrderStatus.ORDERED,
     label: 'Commandé',
     color: 'bg-purple-50 text-purple-800 border-purple-200 dark:bg-purple-500/15 dark:text-purple-400 dark:border-purple-500/30'
   },
   {
-    value: 'LIVRE',
+    value: OrderStatus.DELIVERED,
     label: 'Livré',
     color: 'bg-cyan-50 text-cyan-800 border-cyan-200 dark:bg-cyan-500/15 dark:text-cyan-400 dark:border-cyan-500/30'
   },
   {
-    value: 'CLOTURE',
+    value: OrderStatus.CLOSED,
     label: 'Clôturé',
     color: 'bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-400 dark:border-emerald-500/30'
   }
-]
+] as const
 
 export const PAYMENT_METHODS = [
-  { value: 'WERO', label: 'Wero' },
-  { value: 'VIREMENT', label: 'Virement bancaire' },
-  { value: 'PAYPAL', label: 'PayPal' },
-  { value: 'ESPECES', label: 'Espèces' },
-  { value: 'LYDIA', label: 'Lydia' },
-  { value: 'AUTRE', label: 'Autre' }
-]
+  { value: PaymentMethod.WERO, label: 'Wero' },
+  { value: PaymentMethod.TRANSFER, label: 'Virement bancaire' },
+  { value: PaymentMethod.PAYPAL, label: 'PayPal' },
+  { value: PaymentMethod.CASH, label: 'Espèces' },
+  { value: PaymentMethod.LYDIA, label: 'Lydia' },
+  { value: PaymentMethod.OTHER, label: 'Autre' }
+] as const
 
 export function resolveColorHex(colorName: string, existingHex?: string): string {
   if (!colorName) return existingHex || '#71717a'
@@ -181,5 +184,20 @@ export function resolveColorHex(colorName: string, existingHex?: string): string
   if (lower.includes('argent') || lower.includes('silver')) return '#a6b1b9'
 
   return existingHex || '#71717a'
+}
+
+export function getDemandNextStatus(status: NeedStatus | string) {
+  switch (status) {
+    case NeedStatus.REQUESTED:
+      return { next: NeedStatus.ASSIGNED, label: 'Prendre en charge', icon: CheckCircle }
+    case NeedStatus.ASSIGNED:
+      return { next: NeedStatus.ORDERED, label: 'Commandé', icon: ShoppingBag }
+    case NeedStatus.ORDERED:
+      return { next: NeedStatus.RECEIVED, label: 'Reçu', icon: Truck }
+    case NeedStatus.RECEIVED:
+      return { next: NeedStatus.DISTRIBUTED, label: 'Distribué', icon: PackageCheck }
+    default:
+      return null
+  }
 }
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, inject, type Ref, onMounted, computed } from 'vue'
+import { ref, inject, type Ref, onMounted, computed, watch } from 'vue'
 import BadgeFilament from '~/components/BadgeFilament.vue'
 import StatusBadge from '~/components/StatusBadge.vue'
 import SettlementModal from '~/components/settlements/SettlementModal.vue'
@@ -13,26 +13,30 @@ import {
   ChevronRight,
   Layers,
   Edit2,
-  CheckCircle,
-  Truck,
-  PackageCheck,
   PauseCircle
 } from 'lucide-vue-next'
 import { DISCOUNT_THRESHOLD } from '~/composables/useDiscountThreshold'
+import { getDemandNextStatus } from '~/composables/useFilamentColors'
+import {
+  NeedStatus,
+  type BalancesResponseDTO,
+  type FilamentDemandDTO,
+  type MemberDTO
+} from '~/types'
 
 const triggerRefresh = inject<() => void>('triggerRefresh')
 const refreshKey = inject<Ref<number>>('refreshKey', ref(0))
 
-const balancesData = ref<any>(null)
-const demands = ref<any[]>([])
-const members = ref<any[]>([])
+const balancesData = ref<BalancesResponseDTO | null>(null)
+const demands = ref<FilamentDemandDTO[]>([])
+const members = ref<MemberDTO[]>([])
 const loading = ref(true)
 
 // Modals
 const settlementModalOpen = ref(false)
 const orderModalOpen = ref(false)
 const demandModalOpen = ref(false)
-const demandToEdit = ref<any | null>(null)
+const demandToEdit = ref<FilamentDemandDTO | null>(null)
 
 const prefillPayer = ref<number>()
 const prefillReceiver = ref<number>()
@@ -42,13 +46,13 @@ async function loadData() {
   loading.value = true
   try {
     const [b, d, m] = await Promise.all([
-      $fetch('/api/balances'),
-      $fetch('/api/demands'),
-      $fetch('/api/members')
+      $fetch<BalancesResponseDTO>('/api/balances'),
+      $fetch<FilamentDemandDTO[]>('/api/demands'),
+      $fetch<MemberDTO[]>('/api/members')
     ])
     balancesData.value = b
-    demands.value = d as any[]
-    members.value = m as any[]
+    demands.value = d
+    members.value = m
   } catch (e) {
     console.error('Error fetching dashboard data', e)
   } finally {
@@ -65,16 +69,16 @@ onMounted(() => {
 })
 
 const pendingDemands = computed(() => {
-  return demands.value.filter(d => d.status !== 'DISTRIBUE' && d.status !== 'ANNULE')
+  return demands.value.filter(d => d.status !== NeedStatus.DISTRIBUTED && d.status !== NeedStatus.CANCELLED)
 })
 
 const orderEligibleDemands = computed(() => {
-  return demands.value.filter(d => d.status === 'DEMANDE' || d.status === 'PRIS_EN_CHARGE')
+  return demands.value.filter(d => d.status === NeedStatus.REQUESTED || d.status === NeedStatus.ASSIGNED)
 })
 
 const totalPendingSpools = computed(() => {
   return demands.value
-    .filter(d => (d.status === 'DEMANDE' || d.status === 'PRIS_EN_CHARGE') && !d.isPaused)
+    .filter(d => (d.status === NeedStatus.REQUESTED || d.status === NeedStatus.ASSIGNED) && !d.isPaused)
     .reduce((sum, d) => sum + d.quantity, 0)
 })
 
@@ -85,13 +89,13 @@ function openQuickSettle(fromId: number, toId: number, amount: number) {
   settlementModalOpen.value = true
 }
 
-function openEditDemand(d: any) {
+function openEditDemand(d: FilamentDemandDTO) {
   demandToEdit.value = d
   demandModalOpen.value = true
 }
 
-async function quickAdvanceStatus(d: any) {
-  const nextStatus = getNextStatus(d.status)?.next
+async function quickAdvanceStatus(d: FilamentDemandDTO) {
+  const nextStatus = getDemandNextStatus(d.status)?.next
   if (!nextStatus) return
   try {
     await $fetch(`/api/demands/${d.id}`, {
@@ -102,21 +106,6 @@ async function quickAdvanceStatus(d: any) {
     if (triggerRefresh) triggerRefresh()
   } catch (e) {
     console.error('Failed to advance status', e)
-  }
-}
-
-function getNextStatus(status: string) {
-  switch (status) {
-    case 'DEMANDE':
-      return { next: 'PRIS_EN_CHARGE', label: 'Prendre en charge', icon: CheckCircle }
-    case 'PRIS_EN_CHARGE':
-      return { next: 'COMMANDE', label: 'Commandé', icon: ShoppingBag }
-    case 'COMMANDE':
-      return { next: 'RECU', label: 'Reçu', icon: Truck }
-    case 'RECU':
-      return { next: 'DISTRIBUE', label: 'Distribué', icon: PackageCheck }
-    default:
-      return null
   }
 }
 </script>
@@ -324,14 +313,14 @@ function getNextStatus(status: string) {
             <!-- Standardized Quick Next Status Button -->
             <div class="w-[120px] flex items-center justify-center flex-shrink-0">
               <button
-                v-if="getNextStatus(d.status)"
+                v-if="getDemandNextStatus(d.status)"
                 type="button"
                 class="w-full inline-flex items-center justify-center gap-1 px-2 py-1 text-[11px] font-medium rounded-lg bg-zinc-100 hover:bg-zinc-200 text-zinc-800 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 transition-colors truncate active:scale-95"
-                :title="getNextStatus(d.status)!.label"
+                :title="getDemandNextStatus(d.status)!.label"
                 @click="quickAdvanceStatus(d)"
               >
-                <component :is="getNextStatus(d.status)!.icon" class="w-3 h-3 text-bambu-600 dark:text-bambu-400 flex-shrink-0" />
-                <span class="truncate">{{ getNextStatus(d.status)!.label }}</span>
+                <component :is="getDemandNextStatus(d.status)!.icon" class="w-3 h-3 text-bambu-600 dark:text-bambu-400 flex-shrink-0" />
+                <span class="truncate">{{ getDemandNextStatus(d.status)!.label }}</span>
               </button>
             </div>
           </div>

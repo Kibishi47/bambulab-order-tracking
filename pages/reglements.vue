@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, inject, type Ref } from 'vue'
+import { ref, onMounted, inject, type Ref, watch } from 'vue'
 import SettlementModal from '~/components/settlements/SettlementModal.vue'
 import {
   Scale,
@@ -10,18 +10,23 @@ import {
   CreditCard,
   History
 } from 'lucide-vue-next'
+import type {
+  BalancesResponseDTO,
+  MemberDTO,
+  SettlementDTO
+} from '~/types'
 
 const triggerRefresh = inject<() => void>('triggerRefresh')
 const refreshKey = inject<Ref<number>>('refreshKey', ref(0))
 
-const balancesData = ref<any>(null)
-const settlements = ref<any[]>([])
-const members = ref<any[]>([])
+const balancesData = ref<BalancesResponseDTO | null>(null)
+const settlements = ref<SettlementDTO[]>([])
+const members = ref<MemberDTO[]>([])
 const loading = ref(true)
 
 // Modal
 const settlementModalOpen = ref(false)
-const settlementToEdit = ref<any>(null)
+const settlementToEdit = ref<SettlementDTO | null>(null)
 const prefillPayer = ref<number>()
 const prefillReceiver = ref<number>()
 const prefillAmount = ref<number>()
@@ -30,13 +35,13 @@ async function loadData() {
   loading.value = true
   try {
     const [b, s, m] = await Promise.all([
-      $fetch('/api/balances'),
-      $fetch('/api/settlements'),
-      $fetch('/api/members')
+      $fetch<BalancesResponseDTO>('/api/balances'),
+      $fetch<SettlementDTO[]>('/api/settlements'),
+      $fetch<MemberDTO[]>('/api/members')
     ])
     balancesData.value = b
-    settlements.value = s as any[]
-    members.value = m as any[]
+    settlements.value = s
+    members.value = m
   } catch (e) {
     console.error('Error loading balances data', e)
   } finally {
@@ -60,7 +65,7 @@ function openQuickSettle(fromId: number, toId: number, amount: number) {
   settlementModalOpen.value = true
 }
 
-function openEditSettlement(s: any) {
+function openEditSettlement(s: SettlementDTO) {
   settlementToEdit.value = s
   settlementModalOpen.value = true
 }

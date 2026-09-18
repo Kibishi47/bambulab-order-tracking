@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { DEMAND_STATUSES, ORDER_STATUSES } from '~/composables/useFilamentColors'
+import type { NeedStatus, OrderStatus } from '~/types'
 
 const props = defineProps<{
-  status: string
+  status: NeedStatus | OrderStatus | string
   type?: 'demand' | 'order'
   size?: 'sm' | 'md'
 }>()

@@ -8,12 +8,13 @@ import {
   DEMAND_STATUSES,
   resolveColorHex
 } from '~/composables/useFilamentColors'
+import { NeedStatus, FilamentFormat, type FilamentDemandDTO } from '~/types'
 
 const props = defineProps<{
-  modelValue: boolean,
-  members: Array<{ id: number, name: string }>,
-  initialMemberId?: number,
-  demandToEdit?: any | null
+  modelValue: boolean
+  members: Array<{ id: number, name: string }>
+  initialMemberId?: number
+  demandToEdit?: FilamentDemandDTO | null
 }>()
 
 const emit = defineEmits<{
@@ -31,11 +32,11 @@ const isSponsored = ref(false)
 const payerMemberId = ref<number | ''>('')
 const isPaused = ref(false)
 const filamentType = ref('PLA Basic')
-const format = ref<'RECHARGE' | 'BOBINE'>('RECHARGE')
+const format = ref<FilamentFormat>(FilamentFormat.REFILL)
 const colorName = ref('Bambu Green')
 const quantity = ref(1)
 const estimatedUnitPrice = ref(16.99)
-const status = ref('DEMANDE')
+const status = ref<NeedStatus>(NeedStatus.REQUESTED)
 const notes = ref('')
 
 watch(() => props.modelValue, (isOpen) => {
@@ -48,11 +49,11 @@ watch(() => props.modelValue, (isOpen) => {
       payerMemberId.value = props.demandToEdit.payerMemberId || ''
       isPaused.value = Boolean(props.demandToEdit.isPaused)
       filamentType.value = props.demandToEdit.filamentType || 'PLA Basic'
-      format.value = props.demandToEdit.format === 'BOBINE' ? 'BOBINE' : 'RECHARGE'
+      format.value = props.demandToEdit.format === FilamentFormat.SPOOL ? FilamentFormat.SPOOL : FilamentFormat.REFILL
       colorName.value = props.demandToEdit.colorName || ''
       quantity.value = props.demandToEdit.quantity || 1
       estimatedUnitPrice.value = props.demandToEdit.estimatedUnitPrice || 16.99
-      status.value = props.demandToEdit.status || 'DEMANDE'
+      status.value = props.demandToEdit.status || NeedStatus.REQUESTED
       notes.value = props.demandToEdit.notes || ''
     } else {
       // Reset for creation
@@ -61,11 +62,11 @@ watch(() => props.modelValue, (isOpen) => {
       payerMemberId.value = ''
       isPaused.value = false
       filamentType.value = 'PLA Basic'
-      format.value = 'RECHARGE'
+      format.value = FilamentFormat.REFILL
       colorName.value = 'Bambu Green'
       quantity.value = 1
       estimatedUnitPrice.value = 16.99
-      status.value = 'DEMANDE'
+      status.value = NeedStatus.REQUESTED
       notes.value = ''
       updateSuggestedPrice()
     }
@@ -81,13 +82,13 @@ watch(isSponsored, (val) => {
 function updateSuggestedPrice() {
   const match = BAMBU_FILAMENT_TYPES.find(t => t.name.toLowerCase() === filamentType.value.trim().toLowerCase())
   let basePrice = match ? match.defaultPrice : 16.99
-  if (format.value === 'BOBINE') {
+  if (format.value === FilamentFormat.SPOOL) {
     basePrice += 2.0
   }
   estimatedUnitPrice.value = Math.round(basePrice * 100) / 100
 }
 
-function setFormat(newFormat: 'RECHARGE' | 'BOBINE') {
+function setFormat(newFormat: FilamentFormat) {
   format.value = newFormat
   if (!props.demandToEdit) {
     updateSuggestedPrice()
@@ -334,11 +335,11 @@ async function executeDelete() {
             type="button"
             class="p-2.5 text-left rounded-xl border transition-all"
             :class="[
-              format === 'RECHARGE'
+              format === FilamentFormat.REFILL
                 ? 'bg-bambu-50 border-bambu-500 text-zinc-900 dark:bg-bambu-500/10 dark:border-bambu-500 dark:text-white'
                 : 'bg-zinc-50 border-zinc-200 text-zinc-600 hover:bg-zinc-100 dark:bg-zinc-900/60 dark:border-zinc-800 dark:text-zinc-400'
             ]"
-            @click="setFormat('RECHARGE')"
+            @click="setFormat(FilamentFormat.REFILL)"
           >
             <div class="flex items-center justify-between">
               <span class="text-xs font-semibold">Recharge (Refill)</span>
@@ -351,11 +352,11 @@ async function executeDelete() {
             type="button"
             class="p-2.5 text-left rounded-xl border transition-all"
             :class="[
-              format === 'BOBINE'
+              format === FilamentFormat.SPOOL
                 ? 'bg-bambu-50 border-bambu-500 text-zinc-900 dark:bg-bambu-500/10 dark:border-bambu-500 dark:text-white'
                 : 'bg-zinc-50 border-zinc-200 text-zinc-600 hover:bg-zinc-100 dark:bg-zinc-900/60 dark:border-zinc-800 dark:text-zinc-400'
             ]"
-            @click="setFormat('BOBINE')"
+            @click="setFormat(FilamentFormat.SPOOL)"
           >
             <div class="flex items-center justify-between">
               <span class="text-xs font-semibold">Avec bobine (Spool)</span>

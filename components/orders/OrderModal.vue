@@ -4,22 +4,12 @@ import Modal from '~/components/Modal.vue'
 import BadgeFilament from '~/components/BadgeFilament.vue'
 import DatePicker from '~/components/DatePicker.vue'
 import { ShoppingCart, Check, Calendar, Hash, User, Euro, PauseCircle, ChevronDown } from 'lucide-vue-next'
+import { ShippingSplitMode, type FilamentDemandDTO } from '~/types'
 
 const props = defineProps<{
   modelValue: boolean
   members: Array<{ id: number, name: string }>
-  pendingDemands: Array<{
-    id: number
-    memberName: string
-    payerMemberName?: string | null
-    filamentType: string
-    format: string
-    colorName: string
-    colorHex: string
-    quantity: number
-    estimatedUnitPrice: number
-    isPaused?: boolean
-  }>
+  pendingDemands: Array<FilamentDemandDTO>
 }>()
 
 const emit = defineEmits<{
@@ -32,7 +22,7 @@ const buyerId = ref<number | ''>('')
 const purchaseDate = ref(new Date().toISOString().slice(0, 10))
 const totalAmount = ref<number | ''>('')
 const shippingFee = ref(0)
-const shippingSplitMethod = ref<'EQUITABLE' | 'PRORATA'>('EQUITABLE')
+const shippingSplitMethod = ref<ShippingSplitMode>(ShippingSplitMode.EQUAL)
 const notes = ref('')
 const selectedDemandIds = ref<number[]>([])
 const showPausedSection = ref(false)
@@ -53,7 +43,7 @@ watch(() => props.modelValue, (isOpen) => {
     orderNumber.value = `FR${Math.floor(10000000 + Math.random() * 90000000)}`
     buyerId.value = ''
     shippingFee.value = 0
-    shippingSplitMethod.value = 'EQUITABLE'
+    shippingSplitMethod.value = ShippingSplitMode.EQUAL
     selectedDemandIds.value = activePendingDemands.value.map(d => d.id)
     autoCalculateTotal()
   }
@@ -249,11 +239,11 @@ async function submit() {
             v-model="shippingSplitMethod"
             class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-bambu-500"
           >
-            <option value="EQUITABLE">Équitable (parts égales)</option>
-            <option value="PRORATA">Au pro rata (valeur des bobines)</option>
+            <option :value="ShippingSplitMode.EQUAL">Équitable (parts égales)</option>
+            <option :value="ShippingSplitMode.PRO_RATA">Au pro rata (valeur des bobines)</option>
           </select>
           <p class="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1">
-            {{ shippingSplitMethod === 'EQUITABLE' ? 'Divisé à parts égales entre chaque participant.' : 'Proportionnel au montant commandé par chaque membre.' }}
+            {{ shippingSplitMethod === ShippingSplitMode.EQUAL ? 'Divisé à parts égales entre chaque participant.' : 'Proportionnel au montant commandé par chaque membre.' }}
           </p>
         </div>
       </div>

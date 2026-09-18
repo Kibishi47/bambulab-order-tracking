@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, inject, type Ref, computed } from 'vue'
+import { ref, onMounted, inject, type Ref, computed, watch } from 'vue'
 import StatusBadge from '~/components/StatusBadge.vue'
 import OrderModal from '~/components/orders/OrderModal.vue'
 import OrderCascadeModal from '~/components/orders/OrderCascadeModal.vue'
@@ -11,32 +11,39 @@ import {
   Truck,
   CheckCheck
 } from 'lucide-vue-next'
+import {
+  NeedStatus,
+  type CascadeAction,
+  type FilamentDemandDTO,
+  type GroupOrderDTO,
+  type MemberDTO
+} from '~/types'
 
 const triggerRefresh = inject<() => void>('triggerRefresh')
 const refreshKey = inject<Ref<number>>('refreshKey', ref(0))
 
-const orders = ref<any[]>([])
-const members = ref<any[]>([])
-const demands = ref<any[]>([])
+const orders = ref<GroupOrderDTO[]>([])
+const members = ref<MemberDTO[]>([])
+const demands = ref<FilamentDemandDTO[]>([])
 const loading = ref(true)
 const orderModalOpen = ref(false)
 
 const cascadeModalOpen = ref(false)
-const selectedOrderForCascade = ref<any>(null)
-const cascadeAction = ref<'RECEIVE' | 'DISTRIBUTE'>('RECEIVE')
+const selectedOrderForCascade = ref<GroupOrderDTO | null>(null)
+const cascadeAction = ref<CascadeAction>('RECEIVE')
 const cascadeLoading = ref(false)
 
 async function loadOrders() {
   loading.value = true
   try {
     const [o, m, d] = await Promise.all([
-      $fetch('/api/orders'),
-      $fetch('/api/members'),
-      $fetch('/api/demands')
+      $fetch<GroupOrderDTO[]>('/api/orders'),
+      $fetch<MemberDTO[]>('/api/members'),
+      $fetch<FilamentDemandDTO[]>('/api/demands')
     ])
-    orders.value = o as any[]
-    members.value = m as any[]
-    demands.value = d as any[]
+    orders.value = o
+    members.value = m
+    demands.value = d
   } catch (e) {
     console.error('Error loading orders', e)
   } finally {
@@ -44,7 +51,7 @@ async function loadOrders() {
   }
 }
 
-function promptCascade(order: any, action: 'RECEIVE' | 'DISTRIBUTE') {
+function promptCascade(order: GroupOrderDTO, action: CascadeAction) {
   selectedOrderForCascade.value = order
   cascadeAction.value = action
   cascadeModalOpen.value = true
@@ -77,7 +84,7 @@ onMounted(() => {
 })
 
 const pendingDemands = computed(() => {
-  return demands.value.filter(d => d.status === 'DEMANDE' || d.status === 'PRIS_EN_CHARGE')
+  return demands.value.filter(d => d.status === NeedStatus.REQUESTED || d.status === NeedStatus.ASSIGNED)
 })
 </script>
 

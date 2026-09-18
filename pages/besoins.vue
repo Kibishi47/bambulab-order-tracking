@@ -1,31 +1,35 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, inject, type Ref } from 'vue'
+import { ref, computed, onMounted, inject, type Ref, watch } from 'vue'
 import BadgeFilament from '~/components/BadgeFilament.vue'
 import StatusBadge from '~/components/StatusBadge.vue'
 import DemandModal from '~/components/demands/DemandModal.vue'
 import OrderModal from '~/components/orders/OrderModal.vue'
 import {
   BAMBU_FILAMENT_TYPES,
-  DEMAND_STATUSES
+  DEMAND_STATUSES,
+  getDemandNextStatus
 } from '~/composables/useFilamentColors'
 import {
   Layers,
   Plus,
   Search,
-  CheckCircle,
-  Truck,
-  PackageCheck,
   ShoppingBag,
   Trash2,
   Edit2,
   PauseCircle
 } from 'lucide-vue-next'
 import { DISCOUNT_THRESHOLD } from '~/composables/useDiscountThreshold'
+import {
+  NeedStatus,
+  type FilamentDemandDTO,
+  type MemberDTO
+} from '~/types'
+
 const triggerRefresh = inject<() => void>('triggerRefresh')
 const refreshKey = inject<Ref<number>>('refreshKey', ref(0))
 
-const demands = ref<any[]>([])
-const members = ref<any[]>([])
+const demands = ref<FilamentDemandDTO[]>([])
+const members = ref<MemberDTO[]>([])
 const loading = ref(true)
 
 // Filters
@@ -36,18 +40,18 @@ const searchQuery = ref<string>('')
 
 // Modals
 const demandModalOpen = ref(false)
-const demandToEdit = ref<any | null>(null)
+const demandToEdit = ref<FilamentDemandDTO | null>(null)
 const orderModalOpen = ref(false)
 
 async function loadDemands() {
   loading.value = true
   try {
     const [demandsData, membersData] = await Promise.all([
-      $fetch('/api/demands'),
-      $fetch('/api/members')
+      $fetch<FilamentDemandDTO[]>('/api/demands'),
+      $fetch<MemberDTO[]>('/api/members')
     ])
-    demands.value = demandsData as any[]
-    members.value = membersData as any[]
+    demands.value = demandsData
+    members.value = membersData
   } catch (e) {
     console.error('Error loading demands', e)
   } finally {
@@ -81,7 +85,7 @@ const filteredDemands = computed(() => {
 })
 
 const pendingForOrder = computed(() => {
-  return demands.value.filter(d => (d.status === 'DEMANDE' || d.status === 'PRIS_EN_CHARGE') && !d.isPaused)
+  return demands.value.filter(d => (d.status === NeedStatus.REQUESTED || d.status === NeedStatus.ASSIGNED) && !d.isPaused)
 })
 
 const totalPendingSpools = computed(() => {
@@ -100,12 +104,12 @@ function openCreateModal() {
   demandModalOpen.value = true
 }
 
-function openEditModal(d: any) {
+function openEditModal(d: FilamentDemandDTO) {
   demandToEdit.value = d
   demandModalOpen.value = true
 }
 
-async function togglePause(d: any) {
+async function togglePause(d: FilamentDemandDTO) {
   try {
     const nextVal = !d.isPaused
     await $fetch(`/api/demands/${d.id}`, {
@@ -119,7 +123,7 @@ async function togglePause(d: any) {
   }
 }
 
-async function updateStatus(id: number, nextStatus: string) {
+async function updateStatus(id: number, nextStatus: NeedStatus | string) {
   try {
     await $fetch(`/api/demands/${id}`, {
       method: 'PATCH',
@@ -129,21 +133,6 @@ async function updateStatus(id: number, nextStatus: string) {
     if (triggerRefresh) triggerRefresh()
   } catch (e) {
     console.error('Error updating status', e)
-  }
-}
-
-function getNextStatus(status: string) {
-  switch (status) {
-    case 'DEMANDE':
-      return { next: 'PRIS_EN_CHARGE', label: 'Prendre en charge', icon: CheckCircle }
-    case 'PRIS_EN_CHARGE':
-      return { next: 'COMMANDE', label: 'Marquer commandé', icon: ShoppingBag }
-    case 'COMMANDE':
-      return { next: 'RECU', label: 'Reçu', icon: Truck }
-    case 'RECU':
-      return { next: 'DISTRIBUE', label: 'Distribué', icon: PackageCheck }
-    default:
-      return null
   }
 }
 </script>
@@ -385,7 +374,7 @@ function getNextStatus(status: string) {
           <div class="flex items-center justify-end gap-2 pt-2 border-t border-zinc-100 dark:border-zinc-800/60 lg:border-0 lg:pt-0 lg:w-[190px]">
             <!-- Quick Toggle Pause -->
             <button
-              v-if="!d.groupOrderId && (d.status === 'DEMANDE' || d.status === 'PRIS_EN_CHARGE')"
+              v-if="!d.groupOrderId && (d.status === NeedStatus.REQUESTED || d.status === NeedStatus.ASSIGNED)"
               type="button"
               class="p-2 sm:p-1.5 rounded-lg transition-colors border flex-shrink-0"
               :class="[
@@ -412,14 +401,14 @@ function getNextStatus(status: string) {
             <!-- Standardized Next Status Button (largeur fixe 120px) -->
             <div class="w-[120px] flex items-center justify-center flex-shrink-0">
               <button
-                v-if="getNextStatus(d.status)"
+                v-if="getDemandNextStatus(d.status)"
                 type="button"
                 class="w-full inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 sm:py-1 text-xs sm:text-[11px] font-medium rounded-lg bg-zinc-100 hover:bg-zinc-200 text-zinc-800 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 transition-colors truncate active:scale-95"
-                :title="getNextStatus(d.status)!.label"
-                @click="updateStatus(d.id, getNextStatus(d.status)!.next)"
+                :title="getDemandNextStatus(d.status)!.label"
+                @click="updateStatus(d.id, getDemandNextStatus(d.status)!.next)"
               >
-                <component :is="getNextStatus(d.status)!.icon" class="w-3.5 h-3.5 sm:w-3 sm:h-3 text-bambu-600 dark:text-bambu-400 flex-shrink-0" />
-                <span class="truncate">{{ getNextStatus(d.status)!.label }}</span>
+                <component :is="getDemandNextStatus(d.status)!.icon" class="w-3.5 h-3.5 sm:w-3 sm:h-3 text-bambu-600 dark:text-bambu-400 flex-shrink-0" />
+                <span class="truncate">{{ getDemandNextStatus(d.status)!.label }}</span>
               </button>
             </div>
           </div>
