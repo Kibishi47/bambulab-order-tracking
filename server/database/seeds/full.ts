@@ -59,7 +59,7 @@ export function seedFull() {
 
   const [thomas, sophie, lucas, camille, alexandre] = db.insert(members).values(memberList).returning().all()
 
-  // 2. Commande 1 : Frais de port EQUITABLE (6.00 €), acheteur Thomas, statut LIVRE
+  // 2. Commande 1 : Frais de port EQUAL (6.00 €), acheteur Thomas, statut RECEIVED
   // Total = 2*14.99 + 2*16.99 + 1*15.99 + 6.00 = 29.98 + 33.98 + 15.99 + 6.00 = 85.95 €
   const [order1] = db.insert(groupOrders).values({
     orderNumber: 'FR24098112',
@@ -73,7 +73,7 @@ export function seedFull() {
     createdAt: now
   }).returning().all()
 
-  // 3. Commande 2 : Frais de port PRORATA (8.50 €), acheteuse Sophie, statut COMMANDE
+  // 3. Commande 2 : Frais de port PRO_RATA (8.50 €), acheteuse Sophie, statut ORDERED
   // Total = 2*18.99 + 2*28.99 + 1*23.99 + 8.50 = 37.98 + 57.98 + 23.99 + 8.50 = 128.45 €
   const [order2] = db.insert(groupOrders).values({
     orderNumber: 'FR24099450',
@@ -87,7 +87,7 @@ export function seedFull() {
     createdAt: now
   }).returning().all()
 
-  // 4. Demandes associées et statuts variés (DEMANDE, COMMANDE, RECU, DISTRIBUE)
+  // 4. Demandes associées et statuts variés (REQUESTED, ORDERED, RECEIVED, DISTRIBUTED)
   db.insert(filamentDemands).values([
     // Dans Commande 1 (Statut RECU & DISTRIBUE)
     {
@@ -187,7 +187,7 @@ export function seedFull() {
       updatedAt: now
     },
 
-    // Besoins non commandés (Statut DEMANDE, groupOrderId = null)
+    // Besoins non commandés (Statut REQUESTED, groupOrderId = null)
     {
       memberId: alexandre.id,
       payerMemberId: null,
@@ -269,9 +269,9 @@ export function seedFull() {
 
   console.log('✅ Jeu de données exhaustif injecté avec succès :')
   console.log('   - 5 membres avec coordonnées complètes')
-  console.log('   - 2 commandes groupées (1 Équitable, 1 Pro-rata)')
-  console.log('   - 8 besoins (DEMANDE, COMMANDE, RECU, DISTRIBUE)')
-  console.log('   - Règlements via Wero et Virement bancaire')
+  console.log('   - 2 commandes groupées (1 EQUAL, 1 PRO_RATA)')
+  console.log('   - 8 besoins (REQUESTED, ORDERED, RECEIVED, DISTRIBUTED)')
+  console.log('   - Règlements via WERO et TRANSFER')
 }
 
 if (process.argv[1]?.endsWith('full.ts')) {

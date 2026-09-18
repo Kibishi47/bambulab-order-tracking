@@ -56,10 +56,10 @@ L'application permet à un groupe d'amis d'optimiser leurs commandes de filament
 | `order_number` | TEXT | NOT NULL | N° commande Bambu Lab (ex: #FR24098765) |
 | `buyer_id` | INTEGER | FK `members.id` (CASCADE) | Membre qui avance l'argent |
 | `purchase_date` | TEXT | NOT NULL | Date d'achat (YYYY-MM-DD) |
-| `status` | TEXT | NOT NULL | `PREPARATION`, `COMMANDE`, `LIVRE`, `CLOTURE` |
+| `status` | TEXT | NOT NULL | `PENDING`, `ORDERED`, `RECEIVED`, `DISTRIBUTED` |
 | `total_amount` | REAL | NOT NULL | Montant réel payé sur le store (€) |
 | `shipping_fee` | REAL | NOT NULL DEFAULT 0 | Frais de port réels (€) |
-| `shipping_split_method` | TEXT | NOT NULL DEFAULT 'EQUITABLE' | Mode de répartition des frais : `EQUITABLE` ou `PRORATA` |
+| `shipping_split_method` | TEXT | NOT NULL DEFAULT 'EQUAL' | Mode de répartition des frais : `EQUAL` ou `PRO_RATA` |
 | `notes` | TEXT | NULLABLE | Suivi colis, transporteur, etc. |
 | `created_at` | TEXT | NOT NULL | Timestamp ISO |
 
@@ -71,13 +71,13 @@ L'application permet à un groupe d'amis d'optimiser leurs commandes de filament
 | `payer_member_id` | INTEGER | NULLABLE, FK `members.id` (SET NULL) | Membre qui prend en charge financièrement (si NULL : `member_id`) |
 | `group_order_id` | INTEGER | FK `group_orders.id` (SET NULL) | Commande groupée associée |
 | `filament_type` | TEXT | NOT NULL | PLA Basic, PLA Matte, PETG HF, TPU 95A, etc. |
-| `format` | TEXT | NOT NULL | `RECHARGE` (refill) ou `BOBINE` (spool) |
+| `format` | TEXT | NOT NULL | `REFILL` ou `SPOOL` |
 | `color_name` | TEXT | NOT NULL | Nom de la couleur |
 | `color_hex` | TEXT | NOT NULL | Code hexadécimal (#00AE42, etc.) |
 | `quantity` | INTEGER | NOT NULL DEFAULT 1 | Nombre de bobines |
 | `estimated_unit_price` | REAL | NOT NULL | Prix unitaire estimé (€) |
 | `actual_unit_price` | REAL | NULLABLE | Prix unitaire réel facturé (€) |
-| `status` | TEXT | NOT NULL | `DEMANDE`, `PRIS_EN_CHARGE`, `COMMANDE`, `RECU`, `DISTRIBUE`, `ANNULE` |
+| `status` | TEXT | NOT NULL | `REQUESTED`, `ASSIGNED`, `ORDERED`, `RECEIVED`, `DISTRIBUTED`, `CANCELLED` |
 | `is_paused` | INTEGER (BOOLEAN) | NOT NULL DEFAULT 0 | Gel temporaire du besoin (pas de budget, exclus des commandes) |
 | `notes` | TEXT | NULLABLE | Contexte, nom de projet, etc. |
 | `created_at` | TEXT | NOT NULL | Timestamp ISO |
@@ -91,7 +91,7 @@ L'application permet à un groupe d'amis d'optimiser leurs commandes de filament
 | `payer_id` | INTEGER | FK `members.id` (CASCADE) | Membre qui rembourse (débiteur) |
 | `receiver_id` | INTEGER | FK `members.id` (CASCADE) | Membre qui reçoit (créancier) |
 | `amount` | REAL | NOT NULL | Montant remboursé (€) |
-| `payment_method` | TEXT | NOT NULL DEFAULT 'WERO' | `WERO`, `VIREMENT`, `PAYPAL`, `ESPECES`, `LYDIA`, `AUTRE` |
+| `payment_method` | TEXT | NOT NULL DEFAULT 'WERO' | `WERO`, `TRANSFER`, `PAYPAL`, `CASH`, `LYDIA`, `OTHER` |
 | `settled_at` | TEXT | NOT NULL | Date de la transaction (YYYY-MM-DD) |
 | `notes` | TEXT | NULLABLE | Notes ou libellé de virement |
 | `created_at` | TEXT | NOT NULL | Timestamp ISO |
@@ -107,8 +107,8 @@ Pour chaque besoin de filament dans une commande :
 - **Payeur effectif** : `debtorId = payer_member_id || member_id`.
 - Si un article est offert ou pris en charge (`payer_member_id` non nul), la charge financière de la bobine et de ses frais de port associés est imputée au payeur désigné. Le destinataire réel (`member_id`) voit son solde net impacté de 0 € pour cette ligne.
 - **Répartition des frais de port** :
-  - **Pro rata** : La valeur de l'article offert est comptabilisée dans l'assiette du payeur effectif.
-  - **Équitable (parts égales)** : Tout membre payeur (y compris s'il ne commande rien pour lui-même mais paie pour un ami) compte comme participant payeur à part entière dans la division des frais.
+  - **Pro rata (`PRO_RATA`)** : La valeur de l'article offert est comptabilisée dans l'assiette du payeur effectif.
+  - **Équitable (`EQUAL`)** : Tout membre payeur (y compris s'il ne commande rien pour lui-même mais paie pour un ami) compte comme participant payeur à part entière dans la division des frais.
 
 ### Formule du Solde Net Individuel
 Pour chaque membre $M$ :
@@ -117,7 +117,7 @@ $$
 $$
 
 - $\text{Avancé}_M$ : somme des `total_amount` des commandes où $M$ est `buyer_id`.
-- $\text{Consommé}_M$ : somme du coût des bobines où $M$ est payeur effectif passées dans une commande + quote-part des frais de port (`EQUITABLE` : frais divisés par nombre de participants payeurs ; `PRORATA` : frais au prorata de la valeur des filaments pris en charge par le membre).
+- $\text{Consommé}_M$ : somme du coût des bobines où $M$ est payeur effectif passées dans une commande + quote-part des frais de port (`EQUAL` : frais divisés par nombre de participants payeurs ; `PRO_RATA` : frais au prorata de la valeur des filaments pris en charge par le membre).
 - $\text{Remb. Versés}_M$ : somme des virements où $M$ est `payer_id`.
 - $\text{Remb. Reçus}_M$ : somme des virements où $M$ est `receiver_id`.
 

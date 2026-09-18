@@ -14,7 +14,7 @@
 2. **🧵 Gestion continue des besoins (au fil de l'eau)** :
    - **Ajout & Édition complète** : Matière (PLA Basic, PLA Matte, PETG HF, TPU 95A, ABS, PETG-CF, etc.), conditionnement (Recharge éco vs Bobine avec spool), couleur (palette Bambu Lab ou sélecteur personnalisé), quantité, prix estimé, statut et notes de projet.
    - **Action Modifier (crayon)** sur chaque besoin pour ajuster n'importe quel paramètre ou changer manuellement le statut.
-   - **Cycle de vie complet** : `DEMANDE` ➔ `PRIS_EN_CHARGE` ➔ `COMMANDE` ➔ `RECU` ➔ `DISTRIBUE` (avec bouton d'avancement rapide et annulation).
+   - **Cycle de vie complet** : `REQUESTED` ➔ `ASSIGNED` ➔ `ORDERED` ➔ `RECEIVED` ➔ `DISTRIBUTED` (avec bouton d'avancement rapide et annulation).
    - Filtres dynamiques et détection du seuil avantageux (>= 10 bobines en attente pour remise quantitative maximale).
 
 3. **📦 Commandes groupées & Avance des fonds** :
