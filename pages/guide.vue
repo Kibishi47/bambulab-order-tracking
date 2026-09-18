@@ -18,6 +18,7 @@ import {
   HelpCircle,
   Info
 } from 'lucide-vue-next'
+import { DISCOUNT_THRESHOLD } from '~/composables/useDiscountThreshold'
 
 useHead({
   title: 'Comment ça marche ? - BambuShare',
@@ -71,7 +72,7 @@ const profiles = [
       {
         num: '01',
         title: 'Je rassemble les besoins en attente',
-        desc: 'J\'atteins les paliers de remises Bambu Lab (4+ bobines) et le seuil de livraison gratuite (≥ 55 €) pour optimiser les prix de tout le monde.'
+        desc: `J'atteins les paliers de remises Bambu Lab (remise maximale atteinte à ${DISCOUNT_THRESHOLD} bobines) et le seuil de livraison gratuite (≥ 55 €) pour optimiser les prix de tout le monde.`
       },
       {
         num: '02',
@@ -386,7 +387,7 @@ const stepsCycle = [
             Optimisation des paliers
           </h3>
           <p class="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
-            Avant de valider votre panier Bambu Lab, vérifiez si un ami a un besoin en attente. Le store applique des remises significatives dès <strong>4 bobines</strong> et les frais de port sont <strong>offerts dès 55 €</strong>.
+            Avant de valider votre panier Bambu Lab, vérifiez si un ami a un besoin en attente. Le store applique des remises progressives et atteint sa <strong>réduction maximale dès {{ DISCOUNT_THRESHOLD }} bobines</strong> (au-delà, aucune remise supplémentaire). Les frais de port sont également <strong>offerts dès 55 €</strong>.
           </p>
         </div>
 

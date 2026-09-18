@@ -20,7 +20,7 @@ import {
   Edit2,
   PauseCircle
 } from 'lucide-vue-next'
-
+import { DISCOUNT_THRESHOLD } from '~/composables/useDiscountThreshold'
 const triggerRefresh = inject<() => void>('triggerRefresh')
 const refreshKey = inject<Ref<number>>('refreshKey', ref(0))
 
@@ -172,6 +172,26 @@ function getNextStatus(status: string) {
           <span>Créer commande ({{ totalPendingSpools }} bobines)</span>
         </button>
       </div>
+    </div>
+
+    <!-- Seuil bambu lab alert (sobre) -->
+    <div
+      v-if="totalPendingSpools >= DISCOUNT_THRESHOLD"
+      class="p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/40 text-xs text-emerald-800 dark:text-emerald-300 flex items-center justify-between gap-3"
+    >
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-bambu-500" />
+        <span>
+          <strong>Il est temps de commander :</strong> {{ totalPendingSpools }} bobines en attente ! Le seuil optimal de {{ DISCOUNT_THRESHOLD }} bobines est atteint (au-delà, la réduction maximale Bambu Lab est déjà atteinte).
+        </span>
+      </div>
+      <button
+        type="button"
+        class="font-semibold underline hover:opacity-80 flex-shrink-0"
+        @click="orderModalOpen = true"
+      >
+        Passer commande
+      </button>
     </div>
 
     <!-- Filters Bar -->

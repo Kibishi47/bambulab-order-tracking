@@ -18,6 +18,7 @@ import {
   PackageCheck,
   PauseCircle
 } from 'lucide-vue-next'
+import { DISCOUNT_THRESHOLD } from '~/composables/useDiscountThreshold'
 
 const triggerRefresh = inject<() => void>('triggerRefresh')
 const refreshKey = inject<Ref<number>>('refreshKey', ref(0))
@@ -129,7 +130,7 @@ function getNextStatus(status: string) {
         </p>
       </div>
 
-      <div v-if="totalPendingSpools >= 4" class="flex items-center gap-2.5">
+      <div v-if="totalPendingSpools >= DISCOUNT_THRESHOLD" class="flex items-center gap-2.5">
         <button
           type="button"
           class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 border border-zinc-300 dark:border-zinc-700 transition-colors"
@@ -143,13 +144,13 @@ function getNextStatus(status: string) {
 
     <!-- Seuil bambu lab alert (sobre) -->
     <div
-      v-if="totalPendingSpools >= 10"
+      v-if="totalPendingSpools >= DISCOUNT_THRESHOLD"
       class="p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/40 text-xs text-emerald-800 dark:text-emerald-300 flex items-center justify-between gap-3"
     >
       <div class="flex items-center gap-2">
         <span class="w-2 h-2 rounded-full bg-bambu-500" />
         <span>
-          <strong>Seuil de remise atteint :</strong> {{ totalPendingSpools }} bobines sont prêtes pour la commande groupée.
+          <strong>Il est temps de commander :</strong> {{ totalPendingSpools }} bobines en attente ! Le seuil optimal de {{ DISCOUNT_THRESHOLD }} bobines est atteint (au-delà, la réduction maximale Bambu Lab est déjà atteinte).
         </span>
       </div>
       <button

@@ -7,7 +7,7 @@ Ce document détaille l'architecture globale, les conventions techniques et les 
 ## 1. Vue d'Ensemble & Objectifs Métier
 
 L'application permet à un groupe d'amis d'optimiser leurs commandes de filaments sur le store officiel **Bambu Lab** :
-- **Commandes groupées** : Atteindre les seuils de frais de port gratuits (>= 55 €) et les remises quantitatives (>= 4 bobines).
+- **Commandes groupées** : Atteindre les seuils de frais de port gratuits (>= 55 €) et le seuil optimal de remise maximale (>= 10 bobines, centralisé dans `composables/useDiscountThreshold.ts`).
 - **Avance de trésorerie** : Un seul membre (l'acheteur) passe la commande et paye l'intégralité du panier.
 - **Cycle de vie & Édition complète** : Suivi fin de chaque bobine, avec possibilité d'avancement rapide du statut et d'édition complète (matière, couleur, quantité, prix estimé, statut, notes).
 - **Remboursements simplifiés ("Qui doit quoi à qui")** : Minimisation du nombre de virements nécessaires pour solder tous les comptes grâce à un algorithme glouton de compensation de dettes.
