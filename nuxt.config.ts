@@ -15,8 +15,7 @@ export default defineNuxtConfig({
     head: {
       title: 'BambuShare - Suivi des commandes groupées de filaments 3D',
       link: [
-        { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
-        { rel: 'alternate icon', href: '/favicon.ico' }
+        { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg?v=2' }
       ]
     }
   },
