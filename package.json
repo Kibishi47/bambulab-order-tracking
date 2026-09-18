@@ -8,7 +8,13 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
-    "db:seed": "tsx server/database/seed.ts"
+    "db:migrate": "tsx server/database/migrate.ts",
+    "db:reset": "rm -f data/bambulab.db data/bambulab.db-wal data/bambulab.db-shm && tsx server/database/migrate.ts",
+    "db:seed": "tsx server/database/seed.ts",
+    "seed:minimal": "tsx server/database/seeds/minimal.ts",
+    "seed:pending": "tsx server/database/seeds/pending.ts",
+    "seed:full": "tsx server/database/seeds/full.ts",
+    "seed:clean": "tsx server/database/seeds/clean.ts"
   },
   "dependencies": {
     "@lucide/vue": "^1.47.0",
