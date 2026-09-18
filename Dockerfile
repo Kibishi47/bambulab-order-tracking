@@ -1,0 +1,55 @@
+# ----------------------------------------------------
+# Stage 1: Builder with native compilation tools
+# ----------------------------------------------------
+FROM node:22-alpine AS builder
+
+WORKDIR /app
+
+# Install native build dependencies for better-sqlite3
+RUN apk add --no-cache python3 make g++
+
+# Install dependencies leveraging layer caching
+COPY package*.json ./
+RUN npm ci
+
+# Copy project files
+COPY . .
+
+# Build production Nuxt / Nitro application
+ENV NODE_ENV=production
+RUN npx nuxt build
+
+# ----------------------------------------------------
+# Stage 2: Production Runner (Lean Alpine Image)
+# ----------------------------------------------------
+FROM node:22-alpine AS runner
+
+WORKDIR /app
+
+# Add curl for Coolify and Docker healthchecks
+RUN apk add --no-cache curl
+
+# Create persistent database folder and set permissions
+RUN mkdir -p /app/data && chown -R node:node /app
+
+# Copy production output from builder
+COPY --from=builder --chown=node:node /app/.output /app/.output
+
+# Use non-root node user for security
+USER node
+
+# Production environment variables
+ENV NODE_ENV=production
+ENV HOST=0.0.0.0
+ENV PORT=3000
+ENV DATABASE_PATH=/app/data/bambulab.db
+
+# Expose Nuxt default port
+EXPOSE 3000
+
+# Healthcheck for Coolify monitoring
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD curl -f http://localhost:3000/api/health || exit 1
+
+# Start the standalone Nitro server
+CMD ["node", ".output/server/index.mjs"]
